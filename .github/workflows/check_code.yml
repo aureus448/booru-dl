@@ -67,6 +67,7 @@ jobs:
       - name: Generate coverage report
         run: |
           pip install pytest pytest-cov requests
+          export URI=secrets.URI
           pytest --cov=./ --cov-report=xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1

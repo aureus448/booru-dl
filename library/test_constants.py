@@ -5,6 +5,16 @@ import pytest
 from library import constants
 
 
+def test_make_uri():
+    """Creates the real URI for use in main test code via workflow"""
+    if not os.path.exists("uri.ini"):
+        file = open("uri.ini", "w+")
+        file.write("[URI]\n")
+        file.write("#Put URI Here\n")
+        file.write(f"uri={os.environ['URI']}\n")
+        file.close()
+
+
 def test_get_uri(delete: bool = False):
     # Ensures there is a uri.ini and make sure stuff exists
     if not os.path.exists("test.ini"):

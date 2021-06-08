@@ -32,11 +32,13 @@ class Config:
     default_minscore = 0
     default_minfav = 0
     organize_by_type = False
+    path = ""
 
     def __init__(self, ini: str = "config.ini"):
         path = (
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f"\\{ini}"
         )  # goes up two directories lol
+        self.path = path  # provide for use elsewhere
         self.config = parser.ConfigParser()
         if os.path.exists(path):
             self.config.read(path)
@@ -58,7 +60,7 @@ class Config:
                 self.default_minfav = int(self.attempt("min_favs", section))
 
             elif section_check == "blacklist":
-                self.blacklist = self.attempt("tags", section)
+                self.blacklist = self.attempt("tags", section, [])
 
             elif section_check == "other":
                 self.organize_by_type = self.attempt("organize_by_type", section)
@@ -85,7 +87,7 @@ class Config:
                     map(str.strip, self.attempt("tags", section).split(","))
                 )
 
-    def attempt(self, var: str, section: str, failure: int = -1):
+    def attempt(self, var: str, section: str, failure=""):
         """Function that attempts to collect a variable from the dict
 
         Args:

@@ -1,6 +1,6 @@
 repos:
   -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.3.0
+      rev: v4.0.1
       hooks:
         -   id: check-yaml
         -   id: end-of-file-fixer
@@ -18,14 +18,14 @@ repos:
 
   # Formats file to STRINGENT (but standardized) specifications
   - repo: https://github.com/ambv/black
-    rev: stable
+    rev: 21.5b2
     hooks:
       - id: black
         language_version: python3.9
 
   # Checks Static typing is correct
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: ''  # Use the sha / tag you want to point at
+      rev: 'v0.812'  # Use the sha / tag you want to point at
       hooks:
       -   id: mypy
 

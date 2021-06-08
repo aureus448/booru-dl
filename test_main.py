@@ -16,7 +16,7 @@ def make_uri():
         file = open(path, "w+")
         file.write("[URI]\n")
         file.write("#Put URI Here\n")
-        logger.debug(f"Environment Variable for URI: {os.environ['URI']}")
+        logger.info(f"Environment Variable for URI: {os.environ['URI']}")
         file.write(f"uri={os.environ['URI']}\n")
         file.close()
 
@@ -34,7 +34,9 @@ def test_download_files():
         result.config.write(cfg)
 
     main.Downloader("test_main.ini")
-    path = os.path.dirname(os.path.abspath(__file__)) + "\\downloads\\Main Test"
+    path = os.path.abspath(
+        os.path.dirname(os.path.abspath(__file__)) + "\\downloads\\Main Test"
+    )
     assert os.path.exists(path)
     os.remove(result.path)  # removes created config file
     shutil.rmtree(path)  # removes test directory

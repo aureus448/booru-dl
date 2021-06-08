@@ -5,9 +5,11 @@ import configparser
 import logging
 import os
 
-from library import backend
+logger = logging.getLogger(__file__)
 
-logger = logging.getLogger("URI Check")
+
+def get_useragent() -> str:
+    return "Booru DL"
 
 
 def get_uri(ini: str = "uri.ini") -> str:
@@ -72,17 +74,13 @@ def main(debug: bool = True) -> dict:
     Returns:
         booru_data (dict): Dictionary of expected available URIs for a booru website
     """
-    global logger
-    # Setup of Script Logger
-    if debug:
-        logger = backend.set_logger(logger, "booru-dl.log")
     # Beginning of Script Execution
     if debug:
         logger.info("URI Check script started [1.0.0]")
     uri = get_uri()
     data = get_booru_data(uri)
     if debug:
-        logger.info(f"Booru Data: {data}")
+        logger.debug(f"Booru Data: {data}")
     return data
 
 

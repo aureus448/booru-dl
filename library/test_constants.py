@@ -5,21 +5,23 @@ import pytest
 from library import constants
 
 
-def test_get_uri():
+def test_get_uri(delete: bool = False):
     # Ensures there is a uri.ini and make sure stuff exists
-    if not os.path.exists("uri.ini"):
-        file = open("uri.ini", "w+")
+    if not os.path.exists("test.ini"):
+        file = open("test.ini", "w+")
         file.write("[URI]\n")
         file.write("#Put URI Here\n")
         file.write("uri=apple.net\n")
         file.close()
-    config = constants.get_uri()
+    config = constants.get_uri("test.ini")
+    if delete:
+        os.remove("test.ini")  # delete after test run successful
     assert type(config) == str
 
 
 def test_get_uri_exist():
     # Runs the previous test through second conditional (if file exists)
-    test_get_uri()
+    test_get_uri(delete=True)  # deletes file after successful run
 
 
 def test_get_uri_fail():
@@ -37,3 +39,7 @@ def test_get_booru_data():
 def test_main():
     result = constants.main(debug=False)
     assert type(result) == dict
+
+
+def test_get_useragent():
+    assert type(constants.get_useragent()) == str

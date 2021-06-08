@@ -71,6 +71,7 @@ class Downloader:
                 for chunk in result.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
+            print(f"Downloaded {file_name} to {path}")
             return file_name
         else:
             logger.error(

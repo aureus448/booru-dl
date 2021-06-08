@@ -24,11 +24,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
-profile=
-# Settings for consistency with black linting
-multi_line_output = 3
-include_trailing_comma = true
-src_paths = ["isort", "test"]
+profile='black'
 
 [tool.black]
 target-version = ['py39']

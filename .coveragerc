@@ -17,6 +17,7 @@ exclude_lines =
     raise NotImplementedError
 
     # Don't complain if non-runnable code isn't run:
+    if debug:
     if 0:
     if __name__ == .__main__.:
 

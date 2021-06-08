@@ -1,6 +1,7 @@
 import configparser as parser
 import logging
-from typing import List
+import os
+from typing import Dict, List
 
 logger = logging.getLogger(__file__)
 
@@ -32,10 +33,17 @@ class Config:
     default_minfav = 0
     organize_by_type = False
 
-    def __init__(self):
+    def __init__(self, ini: str = "config.ini"):
+        path = (
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f"\\{ini}"
+        )  # goes up two directories lol
         self.config = parser.ConfigParser()
-        self.config.read("config.ini")
-        self.posts = dict()
+        if os.path.exists(path):
+            self.config.read(path)
+        else:
+            logger.warning("No Config exists: Generating default")
+            self.config = self.default_config(path)
+        self.posts: Dict[str, object] = dict()
         self.parse_config()
 
     def parse_config(self):
@@ -96,25 +104,31 @@ class Config:
             )
             return failure
 
-    def default_config(self):
+    def default_config(self, ini: str):
         """Creates default config if config doesn't exist
 
         Returns:
             None
         """
         config = parser.ConfigParser()
-        config["Default"] = {"days": 1, "ratings": "s", "min_score": 10, "min_favs": 0}
-        config["Blacklist"] = {"tags": ""}
-        config["Other"] = {"organize_by_type": False}
+        config["Default"] = {
+            "days": "1",
+            "ratings": "s",
+            "min_score": "10",
+            "min_favs": "0",
+        }
+        config["Blacklist"] = {"tags": "dog"}
+        config["Other"] = {"organize_by_type": "False"}
         config["Example Post"] = {
             "notes": "Days can be any (reasonable) number, ratings include s for safe, q for questionable and e for "
             "explicit, tags can be any (valid) tag. Copy this format (without notes) and put what you need ("
             "don't forget to rename the [title])!",
-            "days": 30,
+            "days": "30",
             "ratings": "s",
-            "min_score": 20,
-            "min_favs": 0,
+            "min_score": "20",
+            "min_favs": "0",
             "tags": "cat, cute",
         }
-        with open("config.ini", "w") as cfg:
+        with open(ini, "w") as cfg:
             config.write(cfg)
+        return config

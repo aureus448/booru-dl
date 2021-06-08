@@ -8,9 +8,12 @@ from library import constants
 logger = logging.getLogger(__name__)
 
 
-def test_get_uri(delete: bool = False):
+@pytest.fixture(scope="module")
+def make_test_uri():
     # Ensures there is a uri.ini and make sure stuff exists
-    path = os.path.normpath(os.path.abspath("test.ini"))
+    path = os.path.normpath(
+        os.path.dirname(os.path.abspath(constants.__file__)) + "/test.ini"
+    )
     print(f"Path for Test URI: {path}")
     if not os.path.exists(path):
         file = open(path, "w+")
@@ -18,7 +21,13 @@ def test_get_uri(delete: bool = False):
         file.write("#Put URI Here\n")
         file.write("uri=apple.net\n")
         file.close()
-    config = constants.get_uri(path)
+
+
+def test_get_uri(make_test_uri, delete: bool = False):
+    path = os.path.normpath(
+        os.path.dirname(os.path.abspath(constants.__file__)) + "/test.ini"
+    )
+    config = constants.get_uri("test.ini")
     if delete:
         os.remove(path)  # delete after test run successful
     assert type(config) == str
@@ -26,7 +35,7 @@ def test_get_uri(delete: bool = False):
 
 def test_get_uri_exist():
     # Runs the previous test through second conditional (if file exists)
-    test_get_uri(delete=True)  # deletes file after successful run
+    test_get_uri(make_test_uri, delete=True)  # deletes file after successful run
 
 
 def test_get_uri_fail():

@@ -17,9 +17,10 @@ logger = logging.getLogger(__file__)
 
 class Downloader:
     session = backend.get_session()  # Get useragent
-    filepath = os.path.normpath(os.path.abspath("downloads"))  # Default
     blacklist: typing.List[str] = []
     package: typing.Dict[str, object] = {}
+    path = os.path.dirname(os.path.abspath(__file__))
+    filepath = os.path.normpath(path + "/downloads")
 
     def __init__(self, config_loc: str = "config.ini"):  # Self-starting function
         os.makedirs(self.filepath, exist_ok=True)
@@ -27,7 +28,6 @@ class Downloader:
         self.URI = constants.main()
         self.config = cfg.Config(config_loc)
         self.blacklist = self.config.blacklist
-
         for section in self.config.posts:
             logger.info(f'Beginning Download of section "{section}"')
             sct: cfg.Section = self.config.posts[section]

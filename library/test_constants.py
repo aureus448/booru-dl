@@ -13,4 +13,4 @@ class get_uri(TestCase):
             file.write("#Put URI Here\n")
             file.write("uri=apple.net\n")
         config = constants.get_uri()
-        assert "URI" in config
+        assert type(config) == str

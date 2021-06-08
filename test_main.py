@@ -1,18 +1,22 @@
+import logging
 import os
 import shutil
 
 import main
 from library import config
 
+logger = logging.getLogger(__name__)
+
 
 def make_uri():
     """Creates the real URI for use in main test code via workflow"""
     path = os.path.abspath("library/uri.ini")
-    print(f"Path for Make URI: {path}")
+    logger.debug(f"Path for Make URI: {path}")
     if not os.path.exists(path):
         file = open(path, "w+")
         file.write("[URI]\n")
         file.write("#Put URI Here\n")
+        logger.debug(f"Environment Variable for URI: {os.environ['URI']}")
         file.write(f"uri={os.environ['URI']}\n")
         file.close()
 

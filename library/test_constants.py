@@ -1,13 +1,16 @@
+import logging
 import os
 
 import pytest
 
 from library import constants
 
+logger = logging.getLogger(__name__)
+
 
 def test_get_uri(delete: bool = False):
     # Ensures there is a uri.ini and make sure stuff exists
-    print(f"Path for Test URI: {os.path.abspath('test.ini')}")
+    logger.debug(f"Path for Test URI: {os.path.abspath('test.ini')}")
     if not os.path.exists("test.ini"):
         file = open("test.ini", "w+")
         file.write("[URI]\n")

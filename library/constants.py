@@ -27,8 +27,8 @@ def get_uri(ini: str = "uri.ini") -> str:
     Returns:
         uri (str): A URI to use
     """
-    path = os.path.dirname(os.path.abspath(__file__)) + f"\\{ini}"
-    print(f"Path for Collecting URI: {path}")
+    path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + f"/{ini}")
+    logger.debug(f"Path for Collecting URI: {path}")
     parser = configparser.ConfigParser()
     parser.read(path)
 

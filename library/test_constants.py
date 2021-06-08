@@ -27,3 +27,8 @@ def test_get_booru_data():
     # TODO come up with better tests and ensure it checks for validity of provided uri
     result = constants.get_booru_data("anything_works_here_at the moment")
     assert type(result) == dict
+
+
+def test_main():
+    result = constants.main()
+    assert type(result) == dict

@@ -17,7 +17,7 @@ logger = logging.getLogger(__file__)
 
 class Downloader:
     session = backend.get_session()  # Get useragent
-    filepath = "downloads"  # Default
+    filepath = os.path.normpath(os.path.abspath("downloads"))  # Default
     blacklist: typing.List[str] = []
     package: typing.Dict[str, object] = {}
 
@@ -57,16 +57,16 @@ class Downloader:
         )  # makes file_name 'file_name.<extension>'
 
         if os.path.exists(
-            self.filepath + "\\" + section + "\\" + file_name
+            os.path.normpath(self.filepath + "\\" + section + "\\" + file_name)
         ):  # no point in downloading what we already have
             # DEBUG
             logger.debug(f"File {file_name} already exists - Skipping")
             return 1
         else:
-            os.makedirs(self.filepath + "\\" + section, exist_ok=True)
+            os.makedirs(os.path.normpath(self.filepath + "\\" + section), exist_ok=True)
         result = session.get(url, stream=True)
         if result.status_code == 200:
-            path = self.filepath + "\\" + section + "\\" + file_name
+            path = os.path.normpath(self.filepath + "\\" + section + "\\" + file_name)
             with open(path, "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
                     if chunk:

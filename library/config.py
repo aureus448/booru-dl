@@ -35,7 +35,7 @@ class Config:
     path = ""
 
     def __init__(self, ini: str = "config.ini"):
-        path = (
+        path = os.path.normpath(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f"\\{ini}"
         )  # goes up two directories lol
         self.path = path  # provide for use elsewhere

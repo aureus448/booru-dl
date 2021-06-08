@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def make_uri():
     """Creates the real URI for use in main test code via workflow"""
-    path = os.path.abspath("library/uri.ini")
+    path = os.path.normpath(os.path.abspath("library/uri.ini"))
     print(f"Path for Make URI: {path}")
     if not os.path.exists(path):
         print("Made file")
@@ -37,8 +37,8 @@ def test_download_files():
         result.config.write(cfg)
 
     main.Downloader("test_main.ini")
-    path = os.path.abspath(
-        os.path.dirname(os.path.abspath(__file__)) + "\\downloads\\Main Test"
+    path = os.path.normpath(
+        os.path.dirname(os.path.abspath(__file__)) + "/downloads/Main Test"
     )
     assert os.path.exists(path)
     os.remove(result.path)  # removes created config file

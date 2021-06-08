@@ -10,16 +10,17 @@ logger = logging.getLogger(__name__)
 
 def test_get_uri(delete: bool = False):
     # Ensures there is a uri.ini and make sure stuff exists
-    print(f"Path for Test URI: {os.path.abspath('test.ini')}")
-    if not os.path.exists("test.ini"):
-        file = open("test.ini", "w+")
+    path = os.path.normpath(os.path.abspath("test.ini"))
+    print(f"Path for Test URI: {path}")
+    if not os.path.exists(path):
+        file = open(path, "w+")
         file.write("[URI]\n")
         file.write("#Put URI Here\n")
         file.write("uri=apple.net\n")
         file.close()
-    config = constants.get_uri("test.ini")
+    config = constants.get_uri(path)
     if delete:
-        os.remove("test.ini")  # delete after test run successful
+        os.remove(path)  # delete after test run successful
     assert type(config) == str
 
 

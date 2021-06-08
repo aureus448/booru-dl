@@ -5,7 +5,19 @@ import main
 from library import config
 
 
+def make_uri():
+    """Creates the real URI for use in main test code via workflow"""
+    path = os.path.abspath("library/uri.ini")
+    if not os.path.exists(path):
+        file = open(path, "w+")
+        file.write("[URI]\n")
+        file.write("#Put URI Here\n")
+        file.write(f"uri={os.environ['URI']}\n")
+        file.close()
+
+
 def test_download_files():
+    make_uri()
     result = config.Config("test_main.ini")
     # Modify config with known failures to test
     result.config["Main Test"] = {

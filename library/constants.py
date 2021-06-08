@@ -57,7 +57,7 @@ def get_booru_data(main_uri: str) -> dict:
     )
 
 
-def main() -> dict:
+def main(log: bool = True) -> dict:
     """Function run on execution of constants.py
 
     Provides some info on URI as well as the dict that was collected from the URI
@@ -66,17 +66,23 @@ def main() -> dict:
         Like the other functions indicate, URI is not checked for validity, meaning all
         following steps could be wrong
 
+    Args:
+        log (bool): Whether to log (if ran as main, will do so)
+
     Returns:
         booru_data (dict): Dictionary of expected available URIs for a booru website
     """
     global logger
     # Setup of Script Logger
-    logger = backend.set_logger(logger, "booru-dl.log")
+    if log:
+        logger = backend.set_logger(logger, "booru-dl.log")
     # Beginning of Script Execution
-    logger.info("URI Check script started [1.0.0]")
+    if log:
+        logger.info("URI Check script started [1.0.0]")
     uri = get_uri()
     data = get_booru_data(uri)
-    logger.info(f"Booru Data: {data}")
+    if log:
+        logger.info(f"Booru Data: {data}")
     return data
 
 

@@ -35,5 +35,5 @@ def test_get_booru_data():
 
 
 def test_main():
-    result = constants.main()
+    result = constants.main(log=False)
     assert type(result) == dict

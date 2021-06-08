@@ -16,7 +16,7 @@ name: Lint Code Base
 #############################
 on:
   push:
-    branches-ignore: [master]
+#    branches-ignore: [main] will likely only use main for this project specifically
 
 ###############
 # Set the Job #
@@ -48,5 +48,5 @@ jobs:
         uses: docker://ghcr.io/github/super-linter:slim-v4
         env:
           VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: master
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

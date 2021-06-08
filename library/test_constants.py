@@ -17,6 +17,11 @@ def test_get_uri():
     assert type(config) == str
 
 
+def test_get_uri_exist():
+    # Runs the previous test through second conditional (if file exists)
+    test_get_uri()
+
+
 def test_get_uri_fail():
     # Blank pass-through of config value will fail
     with pytest.raises(ValueError):

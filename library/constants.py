@@ -3,6 +3,7 @@ Constants for use in backend
 """
 import configparser
 import logging
+import os
 
 from library import backend
 
@@ -24,8 +25,9 @@ def get_uri(ini: str = "uri.ini") -> str:
     Returns:
         uri (str): A URI to use
     """
+    path = os.path.dirname(os.path.abspath(__file__)) + f"\\{ini}"
     parser = configparser.ConfigParser()
-    parser.read(ini)
+    parser.read(path)
 
     if "URI" in parser:
         uri = parser["URI"]["uri"]

@@ -15,7 +15,7 @@ class Section:
     rating = 0
     min_score = 0
     min_favs = 0
-    tags = ""
+    tags: list = []
 
 
 class Config:
@@ -45,7 +45,7 @@ class Config:
         else:
             logger.warning("No Config exists: Generating default")
             self.config = self.default_config(path)
-        self.posts: Dict[str, object] = dict()
+        self.posts: Dict[str, Section] = dict()
         self.parse_config()
 
     def parse_config(self):

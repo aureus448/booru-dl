@@ -21,33 +21,25 @@ class Downloader:
     blacklist: typing.List[str] = []
     package: typing.Dict[str, object] = {}
 
-    def __init__(self):  # Self-starting function
+    def __init__(self, config_loc: str = "config.ini"):  # Self-starting function
         os.makedirs(self.filepath, exist_ok=True)
         logger.info("Starting Booru downloader [v1.0.0]")
         self.URI = constants.main()
-        self.config = cfg.Config()
+        self.config = cfg.Config(config_loc)
         self.blacklist = self.config.blacklist
 
         for section in self.config.posts:
             logger.info(f'Beginning Download of section "{section}"')
-            sct = self.config.posts[section]
-            self.format_package(sct.tags)
+            sct: cfg.Section = self.config.posts[section]
+            # 3 tags + score + rating for filtering
+            self.format_package(
+                sct.tags[:3] + [f"score:>={sct.min_score}", f"rating:{sct.rating}"]
+            )
             # DEBUG print(self.package)
             self.get_posts(sct)
 
-    def format_package(self, tags=None, limit: int = 320, before_id: int = 100000000):
+    def format_package(self, tags, limit: int = 320, before_id: int = 100000000):
         """Formats package for session handler"""
-        # Variable checks
-        if tags is None:
-            logger.warning("Set Default tags as none were provided")
-            tags = ["pikachu"]
-
-        if limit > 320:
-            limit = 320
-        if before_id < 1:
-            # DEBUG why so low
-            before_id = 1
-
         # Session package
         package = {
             "page": f"b{before_id}",

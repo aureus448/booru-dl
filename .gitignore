@@ -128,3 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /library/uri.ini
+/config.ini
+/todo notes
+/downloads/

@@ -49,11 +49,9 @@ def get_booru_data(main_uri: str) -> dict:
         booru_data (dict): Dictionary of expected available URIs for a booru website
     """
     return dict(
-        POST_URI=f"{main_uri}/post/show.json",
-        INDEX_URI=f"{main_uri}/post/index.json",
-        TAG_URI=f"{main_uri}/tag/index.json",
-        ALIAS_URI=f"{main_uri}/tag_alias/index.json",
-        TAG_SHOW_URI=f"{main_uri}/tag/show.json",
+        POST_URI=f"{main_uri}/posts.json",
+        TAG_URI=f"{main_uri}/tags.json",
+        ALIAS_URI=f"{main_uri}/tag_aliases.json",
     )
 
 

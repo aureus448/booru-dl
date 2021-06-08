@@ -20,7 +20,7 @@ def test_download_files(make_uri):
         conf_result.config.write(cfg)
 
     result = main.Downloader("test_main.ini")
-    path = os.path.normpath(result.path + "/downloads/Main Test")
+    path = os.path.normpath(result.path + "/downloads/Main Test/")
     assert os.path.exists(path)
     os.remove(conf_result.path)  # removes created config file
     shutil.rmtree(path)  # removes test directory

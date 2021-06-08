@@ -1,0 +1,42 @@
+repos:
+  -   repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.3.0
+      hooks:
+        -   id: check-yaml
+        -   id: end-of-file-fixer
+        -   id: trailing-whitespace
+        -   id: detect-private-key
+        -   id: mixed-line-ending
+        -   id: requirements-txt-fixer
+
+  # Sorts imports
+  - repo: https://github.com/pycqa/isort
+    rev: 5.8.0
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  # Formats file to STRINGENT (but standardized) specifications
+  - repo: https://github.com/ambv/black
+    rev: stable
+    hooks:
+      - id: black
+        language_version: python3.9
+
+  # Checks Static typing is correct
+  -   repo: https://github.com/pre-commit/mirrors-mypy
+      rev: ''  # Use the sha / tag you want to point at
+      hooks:
+      -   id: mypy
+
+  # Pylint Test
+  -   repo: https://github.com/PyCQA/pylint
+      rev: v2.8.3
+      hooks:
+        - id: pylint
+
+  # Flake8 Test
+  -   repo: https://gitlab.com/pycqa/flake8
+      rev: 3.9.2
+      hooks:
+        - id: flake8

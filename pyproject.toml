@@ -22,3 +22,30 @@ black = "^21.5b2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile=
+# Settings for consistency with black linting
+multi_line_output = 3
+include_trailing_comma = true
+src_paths = ["isort", "test"]
+
+[tool.black]
+target-version = ['py39']
+exclude = '''
+(
+    asv_bench/env
+  | \.egg
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.nox
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | setup.py
+)
+'''

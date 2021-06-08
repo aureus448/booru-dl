@@ -1,13 +1,26 @@
 repos:
+  -   repo: https://github.com/MarcoGorelli/absolufy-imports
+      rev: v0.3.0
+      hooks:
+        -   id: absolufy-imports
+            #files:
+  # Formats file to STRINGENT (but standardized) specifications
+  -   repo: https://github.com/python/black
+      rev: 21.5b2
+      hooks:
+        -   id: black
+  -   repo: https://github.com/codespell-project/codespell
+      rev: v2.0.0
+      hooks:
+        -   id: codespell
+            types_or: [python, rst, markdown]
   -   repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.0.1
       hooks:
-        -   id: check-yaml
+        -   id: debug-statements
         -   id: end-of-file-fixer
+            exclude: \.txt$
         -   id: trailing-whitespace
-        -   id: detect-private-key
-        -   id: mixed-line-ending
-        -   id: requirements-txt-fixer
 
   # Sorts imports
   - repo: https://github.com/pycqa/isort
@@ -15,13 +28,6 @@ repos:
     hooks:
       - id: isort
         name: isort (python)
-
-  # Formats file to STRINGENT (but standardized) specifications
-  - repo: https://github.com/ambv/black
-    rev: 21.5b2
-    hooks:
-      - id: black
-        language_version: python3.9
 
   # Checks Static typing is correct
   -   repo: https://github.com/pre-commit/mirrors-mypy

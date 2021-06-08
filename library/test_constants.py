@@ -21,3 +21,9 @@ def test_get_uri_fail():
     # Blank pass-through of config value will fail
     with pytest.raises(ValueError):
         constants.get_uri("")
+
+
+def test_get_booru_data():
+    # TODO come up with better tests and ensure it checks for validity of provided uri
+    result = constants.get_booru_data("anything_works_here_at the moment")
+    assert type(result) == dict

@@ -8,6 +8,7 @@ from library import config
 def make_uri():
     """Creates the real URI for use in main test code via workflow"""
     path = os.path.abspath("library/uri.ini")
+    print(f"Path for Make URI: {path}")
     if not os.path.exists(path):
         file = open(path, "w+")
         file.write("[URI]\n")

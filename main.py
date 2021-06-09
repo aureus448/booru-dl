@@ -127,7 +127,10 @@ class Downloader:
                     self.config.paths["POST_URI"],
                     package,
                     (self.USER, self.API),
-                ).json()["posts"]
+                )
+                current_batch = (
+                    current_batch.json()["posts"] if type(current_batch) != int else []
+                )
             else:
                 current_batch = backend.request_uri(
                     self.session, self.config.paths["POST_URI"], package

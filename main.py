@@ -57,13 +57,13 @@ class Downloader:
         )  # makes file_name 'file_name.<extension>'
 
         if os.path.exists(
-            os.path.normpath(self.filepath + "\\" + section + "\\" + file_name)
+            os.path.normpath(self.filepath + "/" + section + "/" + file_name)
         ):  # no point in downloading what we already have
             # DEBUG
             logger.debug(f"File {file_name} already exists - Skipping")
             return 1
         else:
-            os.makedirs(os.path.normpath(self.filepath + "\\" + section), exist_ok=True)
+            os.makedirs(os.path.normpath(self.filepath + "/" + section), exist_ok=True)
         result = session.get(url, stream=True)
         if result.status_code == 200:
             path = os.path.normpath(self.filepath + "/" + section + "/" + file_name)

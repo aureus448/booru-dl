@@ -5,15 +5,13 @@ import logging
 
 from requests.sessions import Session
 
-from library import constants
-
 logger = logging.getLogger(__file__)
 
 
-def get_session():
+def get_session(useragent: str):
     """Offers a Session for requests"""
     session = Session()
-    session.headers.update({"User-Agent": constants.get_useragent()})
+    session.headers.update({"User-Agent": useragent})
     return session
 
 

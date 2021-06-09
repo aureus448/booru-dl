@@ -6,11 +6,6 @@ import pytest
 from library import config
 
 
-@pytest.fixture()
-def collect_config():
-    return config.Config("test.ini")
-
-
 def test__get_config(collect_config):
     """Ensure config was produced correctly"""
     parser = collect_config

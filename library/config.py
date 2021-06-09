@@ -163,15 +163,17 @@ class Config:
                 # Gets post attributes, uses defaults (see above) if unavailable
                 self.posts[f"{section}"] = Section()
                 self.posts[f"{section}"].name = f"{section}"
-                self.posts[f"{section}"].days = int(self.__get_key("days", section, 20))
+                self.posts[f"{section}"].days = int(
+                    self.__get_key("days", section, self.default_days)
+                )
                 self.posts[f"{section}"].rating = self.__get_key(
-                    "ratings", section, ["s"]
+                    "ratings", section, self.default_rating
                 )
                 self.posts[f"{section}"].min_score = int(
-                    self.__get_key("min_score", section, 20)
+                    self.__get_key("min_score", section, self.default_min_score)
                 )
                 self.posts[f"{section}"].min_faves = int(
-                    self.__get_key("min_faves", section, 0)
+                    self.__get_key("min_faves", section, self.default_min_fav)
                 )
                 self.posts[f"{section}"].tags = list(
                     map(str.strip, (self.__get_key("tags", section, "")).split(","))

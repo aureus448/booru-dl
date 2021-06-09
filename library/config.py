@@ -101,7 +101,7 @@ class Config:
         try:
             return self.config[section][var]
         except KeyError:
-            logger.warning(
+            logger.debug(
                 f"Could not find key {var} in section {section}. Using default: {failure}"
             )
             return failure

@@ -26,6 +26,9 @@ class Downloader:
         os.makedirs(self.filepath, exist_ok=True)
         logger.info("Starting Booru downloader [v1.0.0]")
         self.URI = constants.main()
+        key, user = constants.get_api_key()
+        self.API = key
+        self.USER = user
         self.config = cfg.Config(config_loc)
         self.blacklist = self.config.blacklist
         for section in self.config.posts:
@@ -64,14 +67,17 @@ class Downloader:
             return 1
         else:
             os.makedirs(os.path.normpath(self.filepath + "/" + section), exist_ok=True)
-        result = session.get(url, stream=True)
+        if self.USER and self.API:
+            result = session.get(url, stream=True, auth=(self.USER, self.API))
+        else:
+            result = session.get(url, stream=True)
         if result.status_code == 200:
             path = os.path.normpath(self.filepath + "/" + section + "/" + file_name)
             with open(path, "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-            print(f"Downloaded {file_name} to {path}")
+            logger.debug(f"Downloaded {file_name} to {path}")
             return file_name
         else:
             logger.error(
@@ -91,7 +97,7 @@ class Downloader:
 
         package = self.package
         # TODO allowed ... = config.extensions
-        allowed_extensions = ["jpg", "gif", "png"]  # TODO optional
+        allowed_extensions = ["jpg", "gif", "png", "webm"]  # TODO optional
 
         # 'Telemetry'
         start = datetime.now().timestamp()
@@ -99,7 +105,7 @@ class Downloader:
         total_posts = 0
         max_limit = package["limit"]
         loop = 1  # loop tracking
-        print(
+        logger.debug(
             "No Debug/Info is provided per loop at the moment unless required"
         )  # TODO :P
 
@@ -108,15 +114,26 @@ class Downloader:
             logger.info(
                 f"Current ({max_limit} Posts) Loop: {loop} - Total Posts Downloaded: {total_posts}"
             )
-            current_batch = backend.request_uri(
-                self.session, self.URI["POST_URI"], package
-            ).json()["posts"]
+            if self.USER and self.API:
+                current_batch = backend.request_uri(
+                    self.session, self.URI["POST_URI"], package, (self.USER, self.API)
+                ).json()["posts"]
+            else:
+                current_batch = backend.request_uri(
+                    self.session, self.URI["POST_URI"], package
+                ).json()["posts"]
             for post in current_batch:
                 # Simple profiling setup
                 post_start = time.time()
 
                 # Check for bad extensions
-                file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
+                if post["file"]["url"]:
+                    file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
+                else:
+                    logger.warning(
+                        "File access blocked by site - possibly requires API access"
+                    )
+                    continue
                 if file_ext not in allowed_extensions:
                     # print(post['id'],file_ext)
                     continue
@@ -182,7 +199,7 @@ class Downloader:
                 loop += 1
                 package["page"] = f"b{last_id}"
         end = time.time()
-        logger.info(f"All done! Execution took {end-start:.2f} seconds")
+        logger.info(f"All done! Execution took {end - start:.2f} seconds")
 
 
 if __name__ == "__main__":

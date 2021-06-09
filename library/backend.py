@@ -99,9 +99,15 @@ def get_session():
 #     pass
 
 
-def request_uri(session, url, package=[], silent=False):
-    """Wrapper function for requests - ensures 200 code otherwise fails"""
-    if package:
+def request_uri(session, url, package=[], auth=None, silent=False):
+    """Wrapper function for requests - ensures 200 code otherwise fails
+
+    Args:
+        auth:
+    """
+    if package and auth:
+        result = session.get(url, params=package, auth=auth)
+    elif package:
         result = session.get(url, params=package)
     else:
         result = session.get(url)

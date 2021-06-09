@@ -4,6 +4,7 @@ Constants for use in backend
 import configparser
 import logging
 import os
+from typing import Tuple
 
 logger = logging.getLogger(__file__)
 
@@ -12,7 +13,7 @@ def get_useragent() -> str:
     return "Booru DL"
 
 
-def get_uri(ini: str = "uri.ini") -> str:
+def get_uri(ini: str = "uri.ini"):
     """Given uri.ini collects the expected URI to use
 
     Expects a uri such as https://google.com (but a valid booru one)
@@ -30,7 +31,7 @@ def get_uri(ini: str = "uri.ini") -> str:
     path = os.path.normpath(
         os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + f"/{ini}")
     )
-    print(f"Path for Collecting URI: {path}")
+    logger.debug(f"Path for Collecting URI config: {path}")
     parser = configparser.ConfigParser()
     parser.read(path)
 
@@ -41,6 +42,25 @@ def get_uri(ini: str = "uri.ini") -> str:
         logger.error("No URI Found - Please ensure uri.ini is set up correctly")
         raise ValueError
     return uri
+
+
+def get_api_key(ini: str = "uri.ini") -> Tuple[str, str]:
+    path = os.path.normpath(
+        os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + f"/{ini}")
+    )
+    logger.debug(f"Path for Collecting URI config: {path}")
+    parser = configparser.ConfigParser()
+    parser.read(path)
+
+    # If provided api key for booru - some require this
+    if "api" in (parse := parser["URI"]) and "user" in parse:
+        logger.info(
+            "Collected API and Username from URI config - Will use for Authentication"
+        )
+        return parse["api"], parse["user"]
+    else:
+        logger.info("No API/Username found - Accepted behavior")
+        return "", ""
 
 
 def get_booru_data(main_uri: str) -> dict:

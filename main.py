@@ -3,6 +3,7 @@ Main entrypoint of program. Docs TBD.
 """
 import logging
 import os
+import pathlib
 import time
 import typing
 from datetime import datetime
@@ -10,27 +11,34 @@ from time import sleep
 
 from library import backend
 from library import config as cfg
-from library import constants
 
 logger = logging.getLogger(__file__)
 
 
 class Downloader:
-    session = backend.get_session()  # Get useragent
     blacklist: typing.List[str] = []
     package: typing.Dict[str, object] = {}
-    path = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.normpath(path + "/downloads")
 
-    def __init__(self, config_loc: str = "config.ini"):  # Self-starting function
+    path = os.path.dirname(__file__)
+    filepath = pathlib.PurePath(path + "/downloads")
+
+    def __init__(
+        self, config_loc: str = "config.ini", run: bool = True
+    ):  # Self-starting function
         os.makedirs(self.filepath, exist_ok=True)
         logger.info("Starting Booru downloader [v1.0.0]")
-        self.URI = constants.main()
-        key, user = constants.get_api_key()
-        self.API = key
-        self.USER = user
         self.config = cfg.Config(config_loc)
+        self.session = backend.get_session(self.config.useragent)  # Get useragent
+
+        self.URI = self.config.uri
+        self.API = self.config.api
+        self.USER = self.config.user
+
         self.blacklist = self.config.blacklist
+        if run:
+            self.get_data()
+
+    def get_data(self):
         for section in self.config.posts:
             logger.info(f'Beginning Download of section "{section}"')
             sct: cfg.Section = self.config.posts[section]
@@ -59,25 +67,24 @@ class Downloader:
             file_name + "." + (url.split("/")[-1].split(".")[-1])
         )  # makes file_name 'file_name.<extension>'
 
+        filepath = self.filepath.joinpath(pathlib.PurePath(section + "/"))
         if os.path.exists(
-            os.path.normpath(self.filepath + "/" + section + "/" + file_name)
+            filepath.joinpath(file_name)
         ):  # no point in downloading what we already have
-            # DEBUG
             logger.debug(f"File {file_name} already exists - Skipping")
             return 1
         else:
-            os.makedirs(os.path.normpath(self.filepath + "/" + section), exist_ok=True)
+            os.makedirs(filepath, exist_ok=True)
         if self.USER and self.API:
             result = session.get(url, stream=True, auth=(self.USER, self.API))
         else:
             result = session.get(url, stream=True)
         if result.status_code == 200:
-            path = os.path.normpath(self.filepath + "/" + section + "/" + file_name)
-            with open(path, "wb") as f:
+            with open(filepath.joinpath(file_name), "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-            logger.debug(f"Downloaded {file_name} to {path}")
+            logger.debug(f"Downloaded {file_name} to {filepath.joinpath(file_name)}")
             return file_name
         else:
             logger.error(
@@ -93,7 +100,7 @@ class Downloader:
         # Sections stuff
         max_time = section.days * 86400  # seconds
         min_score = section.min_score
-        min_favs = section.min_favs
+        min_faves = section.min_faves
 
         package = self.package
         # TODO allowed ... = config.extensions
@@ -116,11 +123,14 @@ class Downloader:
             )
             if self.USER and self.API:
                 current_batch = backend.request_uri(
-                    self.session, self.URI["POST_URI"], package, (self.USER, self.API)
+                    self.session,
+                    self.config.paths["POST_URI"],
+                    package,
+                    (self.USER, self.API),
                 ).json()["posts"]
             else:
                 current_batch = backend.request_uri(
-                    self.session, self.URI["POST_URI"], package
+                    self.session, self.config.paths["POST_URI"], package
                 ).json()["posts"]
             for post in current_batch:
                 # Simple profiling setup
@@ -146,7 +156,7 @@ class Downloader:
                     + category["copyright"]
                 )
                 score = post["score"]["total"]
-                favs = post["fav_count"]
+                faves = post["fav_count"]
                 rating = post["rating"]
                 post_time = datetime.fromisoformat(post["created_at"]).timestamp()
 
@@ -165,7 +175,7 @@ class Downloader:
                     # TODO debugstatement
                     # print(f'Debug: Too low score {post_id}')
                     continue
-                if favs < min_favs:  # invalid favcount
+                if faves < min_faves:  # invalid favcount
                     # print(f'Debug: Too low favcount {post_id}')
                     # TODO debugstatement
                     continue

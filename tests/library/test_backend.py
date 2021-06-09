@@ -20,12 +20,6 @@ def test_get_session(collect_config):
 
 
 @pytest.fixture
-def get_session(collect_config):
-    """Uses config to collect a session instance"""
-    return backend.get_session(collect_config.useragent)
-
-
-@pytest.fixture
 def package():
     return {
         "page": "b10000000",

@@ -66,7 +66,7 @@ class Downloader:
             os.makedirs(os.path.normpath(self.filepath + "\\" + section), exist_ok=True)
         result = session.get(url, stream=True)
         if result.status_code == 200:
-            path = os.path.normpath(self.filepath + "\\" + section + "\\" + file_name)
+            path = os.path.normpath(self.filepath + "/" + section + "/" + file_name)
             with open(path, "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
                     if chunk:

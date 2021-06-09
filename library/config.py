@@ -59,6 +59,7 @@ class Config:
             parser (configparser.ConfigParser): Configuration file for project
         """
         path = pathlib.PurePath(f"{self.path}/../{ini}")
+        self.filepath = os.path.abspath(path)
         logger.debug(f"Path for Collecting URI config: {path}")
         parser = configparser.ConfigParser()
 
@@ -70,7 +71,11 @@ class Config:
             return self._default_config(ini)
 
     def _get_useragent(self) -> str:
-        if "URI" in self.parser and "user" in self.parser["URI"]:
+        if (
+            "URI" in self.parser
+            and "user" in self.parser["URI"]
+            and self.parser["URI"]["user"]
+        ):
             return f"Booru DL (user {self.parser['URI']['user']}"
         else:
             return "Booru DL (user unknown)"
@@ -90,7 +95,7 @@ class Config:
         Returns:
             uri (str): A URI to use
         """
-        if "URI" in self.parser:
+        if "URI" in self.parser and "uri" in self.parser["URI"]:
             uri = self.parser["URI"]["uri"]
             logger.info(f"URI Found: {uri}")
         else:
@@ -140,11 +145,12 @@ class Config:
                 #   min faves of 0
                 self.default_days = int(data["days"]) if "days" in data else 20
                 self.default_rating = data["ratings"] if "ratings" in data else ["s"]
-                self.default_min_score = (
+                self.default_min_score = int(
                     data["min_score"] if "min_score" in data else 20
                 )
-                self.default_min_fav = data["min_faves"] if "min_faves" in data else 0
-
+                self.default_min_fav = int(
+                    data["min_faves"] if "min_faves" in data else 0
+                )
             elif section_check == "blacklist":
                 # Defaults to nothing blocked if doesn't exist
                 self.blacklist = data["tags"] if "tags" in data else []
@@ -210,7 +216,7 @@ class Config:
             "days": "20",
             "ratings": "s",
             "min_score": "20",
-            "min_favs": "0",
+            "min_faves": "0",
         }
         config["Blacklist"] = {
             "notes": "Hide stuff you don't want, like filthy dogs!!",
@@ -233,5 +239,7 @@ class Config:
 
 
 if __name__ == "__main__":
+    # Intended to be used with debug breakpoints - otherwise do not use
     config = Config("test.ini")
-    exit()
+    # Warning: Make sure config is passed a test value or you could accidentally delete your config
+    os.remove(config.filepath)

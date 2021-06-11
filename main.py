@@ -153,13 +153,15 @@ class Downloader:
                 searched_posts += 1
                 # Simple profiling setup
                 post_start = time.time()
-
+                last_id = int(
+                    (post_id := post["id"])
+                )  # Set the new last_id to the last available post ran
                 # Check for bad extensions
                 if post["file"]["url"]:
                     file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
                 else:
                     logger.warning(
-                        f"File access for Post #{post['id']} blocked by site - possibly requires API access"
+                        f"File access for Post #{post_id} blocked by site - possibly requires API access"
                     )
                     continue
                 if file_ext not in allowed_extensions:
@@ -170,7 +172,6 @@ class Downloader:
                     continue
 
                 # Metadata - TODO re-enable typed tags
-                post_id = post["id"]
                 tags = (
                     (category := post["tags"])["general"]
                     + category["species"]
@@ -217,8 +218,6 @@ class Downloader:
                 if file_name == 1:
                     skipped_files += 1
                     continue
-
-                last_id = int(post_id)
 
                 # Check timing and ensure 2 requests a second compliance
                 post_finish = time.time()

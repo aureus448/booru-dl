@@ -27,8 +27,12 @@ def create_config():
 
 @pytest.fixture
 def create_config_api(create_config):
-    create_config.parser["URI"]["api"] = "test_api_key"
-    create_config.parser["URI"]["user"] = "test_user"
+    create_config.parser["URI"]["api"] = (
+        os.environ["API"] if "API" in os.environ else "test_api_key"
+    )
+    create_config.parser["URI"]["user"] = (
+        os.environ["USER"] if "USER" in os.environ else "test_user"
+    )
     with open(create_config.filepath, "w") as cfg:
         create_config.parser.write(cfg)
     return create_config

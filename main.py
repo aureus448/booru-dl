@@ -43,9 +43,13 @@ class Downloader:
             logger.info(f'Beginning Download of section "{section}"')
             sct: cfg.Section = self.config.posts[section]
             # 3 tags + score + rating for filtering
-            self.format_package(
-                sct.tags[:3] + [f"score:>={sct.min_score}", f"rating:{sct.rating}"]
-            )
+            if len(sct.rating) > 1:
+                self.format_package(sct.tags[:3] + [f"score:>={sct.min_score}"])
+            else:
+                self.format_package(
+                    sct.tags[:3]
+                    + [f"score:>={sct.min_score}", f"rating:{sct.rating[0]}"]
+                )
             # DEBUG print(self.package)
             self.get_posts(sct)
 

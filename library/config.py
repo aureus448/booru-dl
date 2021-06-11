@@ -14,7 +14,7 @@ class Section:
 
     name: str = ""
     days: int = 0
-    rating: int = 0
+    rating: List[str] = []
     min_score: int = 0
     min_faves: int = 0
     tags: List[str] = []

@@ -148,11 +148,14 @@ class Downloader:
                     file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
                 else:
                     logger.warning(
-                        "File access blocked by site - possibly requires API access"
+                        f"File access for Post #{post['id']} blocked by site - possibly requires API access"
                     )
                     continue
                 if file_ext not in allowed_extensions:
-                    # print(post['id'],file_ext)
+                    logger.debug(
+                        f"Post #{post['id']} was skipped due to being extension "
+                        f"[{file_ext}] (Not in allowed extensions)"
+                    )
                     continue
 
                 # Metadata - TODO re-enable typed tags

@@ -114,7 +114,8 @@ class Downloader:
         start = datetime.now().timestamp()
         last_id = 100000000  # arbitrarily big number
         total_posts = 0
-        max_limit = package["limit"]
+        searched_posts = 0
+        skipped_files = 0
         loop = 1  # loop tracking
         logger.debug(
             "No Debug/Info is provided per loop at the moment unless required"
@@ -122,9 +123,17 @@ class Downloader:
 
         # Main function loop
         while last_id > 1:
-            logger.info(
-                f"Current ({max_limit} Posts) Loop: {loop} - Total Posts Downloaded: {total_posts}"
-            )
+
+            if loop > 1:
+                logger.info(
+                    f"API Search {loop} - Total Posts Downloaded: {total_posts} [{skipped_files} Skipped "
+                    f"({(total_posts + skipped_files) / searched_posts:.2f}% Downloaded)]"
+                )
+            else:
+                logger.info(
+                    f"API Search 1 - Total Posts Downloaded: {total_posts} [{searched_posts} Skipped]"
+                )
+
             if self.USER and self.API:
                 current_batch = backend.request_uri(
                     self.session,
@@ -139,7 +148,9 @@ class Downloader:
                 current_batch = backend.request_uri(
                     self.session, self.config.paths["POST_URI"], package
                 ).json()["posts"]
+
             for post in current_batch:
+                searched_posts += 1
                 # Simple profiling setup
                 post_start = time.time()
 
@@ -163,7 +174,12 @@ class Downloader:
                 tags = (
                     (category := post["tags"])["general"]
                     + category["species"]
+                    + category["character"]
                     + category["copyright"]
+                    + category["artist"]
+                    + category["invalid"]
+                    + category["lore"]
+                    + category["meta"]
                 )
                 score = post["score"]["total"]
                 faves = post["fav_count"]
@@ -199,6 +215,7 @@ class Downloader:
                     self.session, post["file"]["url"], section.name, str(post_id)
                 )  # 3rd argument is file name (optional)
                 if file_name == 1:
+                    skipped_files += 1
                     continue
 
                 last_id = int(post_id)
@@ -219,7 +236,9 @@ class Downloader:
                 loop += 1
                 package["page"] = f"b{last_id}"
         end = time.time()
-        logger.info(f"All done! Execution took {end - start:.2f} seconds")
+        logger.info(
+            f'All done! Execution took {end - start:.2f} seconds for "{section.name}"'
+        )
 
 
 if __name__ == "__main__":

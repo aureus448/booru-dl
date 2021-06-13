@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import configparser
 import logging
 import os
@@ -172,7 +174,7 @@ class Config:
 
             else:
                 # Skip example created by self.default_config or URI constants file
-                if section == "Example Post" or section == "URI":
+                if section == "Example Post" or section in ["URI", "INFO"]:
                     continue
 
                 # Gets post attributes, uses defaults (see above) if unavailable
@@ -226,13 +228,18 @@ class Config:
             None
         """
         path = pathlib.PurePath(f"{self.path}/../{ini}")
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(allow_no_value=True)
 
+        config["INFO"] = {
+            "; booru-dl created by @aureus448": None,
+            "???": "false",
+        }
         config["URI"] = {
-            "notes": "Place the booru URI here (a URI is like https://google.com). Optional support for a booru's API "
-            "key as well as your username for HTTP Basic Authentication where needed",
+            "; Place the Booru URI here (a URI is like https://google.com)": None,
             "uri": "",
+            "; [Optional] Support for a booru API key here": None,
             "api": "",
+            "; [Optional] Support for a booru username here": None,
             "user": "",
         }
         config["Default"] = {
@@ -242,21 +249,35 @@ class Config:
             "ratings": "s",
             "min_score": "20",
             "min_faves": "0",
+            "allowed_types": "jpg, png, gif",
         }
         config["Blacklist"] = {
-            "notes": "Hide stuff you don't want, like filthy dogs!!",
+            "; Hide stuff you don't want, in this example dogs": None,
             "tags": "dog",
         }
-        config["Other"] = {"organize_by_type": "False"}
+        config["Other"] = {
+            "; Organize by file extension into subfolders [Not working at the moment]": None,
+            "organize_by_type": "False",
+        }
         config["Example Post"] = {
-            "notes": "Days can be any (reasonable) number, ratings include s for safe, q for questionable and e for "
-            "explicit, tags can be any (valid) tag. Copy this format (without notes) and put what you need ("
-            "don't forget to rename the [title])!",
+            "; Copy this format (without or without comments [;]) and put what you need": None,
+            "; Don't forget to rename the [title]!": None,
+            "; Days can be any number (Be reasonable or you'll be stuck for hours)": None,
             "days": "30",
+            "; ratings include s for safe, q for questionable and e for explicit": None,
             "ratings": "s",
             "min_score": "20",
             "min_faves": "0",
             "tags": "cat, cute",
+            "; Per-section allowed extension types (gif, webm, png etc. different from default)"
+            " [Include all or leave blank]": None,
+            "allowed_types": "",
+            "; ignore_tags indicate tags to ignore from blacklist (dog used in this example, "
+            "will allow any post with dogs to come through)": None,
+            "ignore_tags": "dog",
+            "; blacklist_tags indicate tags to add to blacklist [For just the section] "
+            "(canine used in this example, will disallow any post with canine to come through)": None,
+            "blacklist_tags": "canine",
         }
         with open(path, "w") as cfg:
             config.write(cfg)

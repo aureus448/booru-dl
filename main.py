@@ -107,8 +107,6 @@ class Downloader:
         min_faves = section.min_faves
 
         package = self.package
-        # TODO allowed ... = config.extensions
-        allowed_extensions = ["jpg", "gif", "png", "webm"]  # TODO optional
 
         # 'Telemetry'
         start = datetime.now().timestamp()
@@ -117,9 +115,6 @@ class Downloader:
         searched_posts = 0
         skipped_files = 0
         loop = 1  # loop tracking
-        logger.debug(
-            "No Debug/Info is provided per loop at the moment unless required"
-        )  # TODO :P
 
         # Main function loop
         while last_id > 1:
@@ -154,9 +149,9 @@ class Downloader:
                         f"File access for Post #{post_id} blocked by site - possibly requires API access"
                     )
                     continue
-                if file_ext not in allowed_extensions:
+                if file_ext not in section.allowed_types:
                     logger.debug(
-                        f"Post #{post['id']} was skipped due to being extension "
+                        f"Post #{post_id} was skipped due to being extension "
                         f"[{file_ext}] (Not in allowed extensions)"
                     )
                     continue
@@ -186,17 +181,37 @@ class Downloader:
                     last_id = 0
                     break
                 if score < min_score:  # invalid score
-                    # TODO debugstatement
-                    # print(f'Debug: Too low score {post_id}')
+                    logger.debug(
+                        f"Post {post_id} has {score} score "
+                        f"(Lower than criteria of {min_score}) - Skipping file"
+                    )
                     continue
                 if faves < min_faves:  # invalid favcount
-                    # print(f'Debug: Too low favcount {post_id}')
-                    # TODO debugstatement
+                    logger.debug(
+                        f"Post {post_id} has {faves} favorites "
+                        f"(Lower than criteria of {min_faves}) - Skipping file"
+                    )
                     continue
+
+                # Check if any blacklisted tags exist, and if so skip
+                blacklisted = False
                 for tag in tags:  # invalid tags
                     if tag in self.blacklist:
-                        # TODO debugstatement
-                        continue  # skip file
+                        # A tag can be blacklist-ignored per section
+                        # but will iterate through all tags to ensure there aren't any actual blacklisted ones
+                        if tag in section.ignore_tags:
+                            logger.debug(
+                                f'Found blacklisted tag "{tag}" for post {post_id}, '
+                                f"However found tag in ignore_tags for section {section.name}"
+                            )
+                        else:
+                            logger.debug(
+                                f'Found blacklisted tag "{tag}" for post {post_id} - Skipping file'
+                            )
+                            blacklisted = True
+                            break  # skip file
+                if blacklisted:
+                    continue
 
                 # Download the file if not blacklisted and stuff
                 file_name = self.download_file(

@@ -18,6 +18,8 @@ class Section:
     min_score: int = 0
     min_faves: int = 0
     tags: List[str] = []
+    ignore_tags: List[str] = []
+    allowed_types: List[str] = []
 
 
 class Config:
@@ -143,6 +145,7 @@ class Config:
                 #   rating of safe
                 #   min score of 20
                 #   min faves of 0
+                #   allowed file extensions of jpg/png/gif (images only)
                 self.default_days = int(data["days"]) if "days" in data else 20
                 self.default_rating = data["ratings"] if "ratings" in data else ["s"]
                 self.default_min_score = int(
@@ -151,9 +154,15 @@ class Config:
                 self.default_min_fav = int(
                     data["min_faves"] if "min_faves" in data else 0
                 )
+                self.default_allowed = (
+                    data["allowed_types"]
+                    if "allowed_types" in data
+                    else "jpg, gif, png"
+                )
+
             elif section_check == "blacklist":
                 # Defaults to nothing blocked if doesn't exist
-                self.blacklist = data["tags"] if "tags" in data else []
+                self.blacklist = data["tags"].split(", ") if "tags" in data else []
 
             elif section_check == "other":
                 # Allows for organizing files by datatype
@@ -183,6 +192,22 @@ class Config:
                 )
                 self.posts[f"{section}"].tags = list(
                     map(str.strip, (self.__get_key("tags", section, "")).split(","))
+                )
+                self.posts[f"{section}"].ignore_tags = list(
+                    map(
+                        str.strip,
+                        (self.__get_key("ignore_tags", section, "")).split(","),
+                    )
+                )
+                self.posts[f"{section}"].allowed_types = list(
+                    map(
+                        str.strip,
+                        (
+                            self.__get_key(
+                                "allowed_types", section, self.default_allowed
+                            )
+                        ).split(","),
+                    )
                 )
 
     def __get_key(self, key: str, section: str, default: object):

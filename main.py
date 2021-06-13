@@ -146,12 +146,12 @@ class Downloader:
                     file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
                 else:
                     logger.warning(
-                        f"File access for Post #{post_id} blocked by site - possibly requires API access"
+                        f"File access for Post {post_id} blocked by site - possibly requires API access"
                     )
                     continue
                 if file_ext not in section.allowed_types:
                     logger.debug(
-                        f"Post #{post_id} was skipped due to being extension "
+                        f"Post {post_id} was skipped due to being extension "
                         f"[{file_ext}] (Not in allowed extensions)"
                     )
                     continue
@@ -199,10 +199,10 @@ class Downloader:
                     if tag in self.blacklist:
                         # A tag can be blacklist-ignored per section
                         # but will iterate through all tags to ensure there aren't any actual blacklisted ones
-                        if tag in section.ignore_tags:
+                        if len(section.ignore_tags) > 0 and tag in section.ignore_tags:
                             logger.debug(
-                                f'Found blacklisted tag "{tag}" for post {post_id}, '
-                                f"However found tag in ignore_tags for section {section.name}"
+                                f'Ignored blacklisted tag "{tag}" for post {post_id}, '
+                                f'due to section "{section.name}" settings'
                             )
                         else:
                             logger.debug(

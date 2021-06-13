@@ -212,7 +212,7 @@ class Config:
 
     def __get_key(self, key: str, section: str, default: object):
         if key in (data := self.parser[section]):
-            return data[key]
+            return data[key] if data[key] else default
         else:
             logger.warning(
                 f"Missing data for {key} for section {section} [Set to Default of {default}]"

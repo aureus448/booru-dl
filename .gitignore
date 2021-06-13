@@ -131,3 +131,4 @@ dmypy.json
 /config.ini
 /todo notes
 /downloads/
+/do_not_include.py

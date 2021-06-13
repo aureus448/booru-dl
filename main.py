@@ -47,7 +47,7 @@ class Downloader:
                 self.format_package(sct.tags[:3] + [f"score:>={sct.min_score}"])
             else:
                 self.format_package(
-                    sct.tags[:3]
+                    sct.tags[:4]
                     + [f"score:>={sct.min_score}", f"rating:{sct.rating[0]}"]
                 )
             # DEBUG print(self.package)
@@ -124,16 +124,6 @@ class Downloader:
         # Main function loop
         while last_id > 1:
 
-            if loop > 1:
-                logger.info(
-                    f"API Search {loop} - Total Posts Downloaded: {total_posts} [{skipped_files} Skipped "
-                    f"({(total_posts + skipped_files) / searched_posts:.2f}% Downloaded)]"
-                )
-            else:
-                logger.info(
-                    f"API Search 1 - Total Posts Downloaded: {total_posts} [{searched_posts} Skipped]"
-                )
-
             if self.USER and self.API:
                 current_batch = backend.request_uri(
                     self.session,
@@ -193,9 +183,6 @@ class Downloader:
                     continue
                 if start - post_time > max_time:  # invalid time
                     # print(f'Debug: Too low time {post_id}')
-                    logger.info(
-                        f"Downloaded all valid posts for the given days ({section.days})"
-                    )
                     last_id = 0
                     break
                 if score < min_score:  # invalid score
@@ -228,6 +215,15 @@ class Downloader:
 
                 total_posts += 1  # If reach here post was acquired
 
+            logger.info(
+                f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
+                f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
+            )
+            if last_id == 0:
+                logger.info(
+                    f"Downloaded all valid posts for the given days ({section.days})"
+                )
+                break
             # Reached end of possible images to download
             if len(current_batch) < 300:
                 break

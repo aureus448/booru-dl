@@ -20,18 +20,61 @@ logger = backend.set_logger(logger, "tests.log")
 def create_config():
     conf_result = config.Config("test_main.ini")
     # Modify config with known failures to test
-    conf_result.parser["Main Test/A"] = {
+    # correct assumptions of a section
+    conf_result.parser["Main Test/Correct_Section"] = {
         "days": "2000",
         "ratings": "s",
         "min_score": "1000",
         "tags": "cat",
     }
-    conf_result.parser["Main Test/B"] = {
-        "days": "2000",
+    # will trigger blacklist
+    conf_result.parser["Main Test/Blacklist_Trigger"] = {
+        "days": "60",
         "ratings": "s, q",
-        "min_score": "1000",
-        "tags": "cat",
+        "min_score": "200",
+        "tags": "dog",
+        "ignore_tags": "",
+        "allowed_types": "",
     }
+    # will ignore blacklist AND change allowed types to only png
+    conf_result.parser["Main Test/Ignore_Blacklist_PNG_Only"] = {
+        "days": "60",
+        "ratings": "s, q",
+        "min_score": "200",
+        "tags": "dog",
+        "ignore_tags": "dog",
+        "allowed_types": "png",
+    }
+    # will trigger min_faves
+    conf_result.parser["Main Test/Min_Faves_Trigger"] = {
+        "days": "60",
+        "ratings": "s",
+        "min_score": "20",
+        "min_faves": "200",
+        "tags": "dog",
+        "ignore_tags": "dog",
+        "allowed_types": "png",
+    }
+    # will trigger rating miss
+    conf_result.parser["Main Test/Rating_Trigger"] = {
+        "days": "60",
+        "ratings": "q, e",
+        "min_score": "200",
+        "min_faves": "200",
+        "tags": "dog",
+        "ignore_tags": "dog",
+        "allowed_types": "png",
+    }
+    # will download more than others on purpose
+    conf_result.parser["Main Test/Multi_Search_Trigger"] = {
+        "days": "20",
+        "ratings": "s, q",
+        "min_score": "20",
+        "tags": "dog",
+        "ignore_tags": "dog",
+        "allowed_types": "png",
+    }
+
     conf_result.parser["URI"]["uri"] = os.environ["URI"]  # Required test field
     conf_result._parse_config()  # re-run configuration
     with open(conf_result.filepath, "w") as cfg:
@@ -40,7 +83,10 @@ def create_config():
     os.remove(conf_result.filepath)
 
 
-@pytest.fixture(params=[False, True], ids=["Fake API", "Real API"])
+@pytest.fixture(
+    params=[False, True],
+    ids=["Fake API [Force Program Crash]", "Real API [download with API key]"],
+)
 def create_config_api(request, create_config):
     correct_keys = request.param
     create_config.parser["URI"]["api"] = (

@@ -25,7 +25,8 @@ class Downloader:
     filepath = pathlib.PurePath(path + "/downloads")
 
     def __init__(
-        self, config_loc: str = "config.ini", run: bool = True
+        self,
+        config_loc: str = "config.ini",
     ):  # Self-starting function
         os.makedirs(self.filepath, exist_ok=True)
         logger.info("Starting Booru downloader [v1.0.0]")
@@ -37,8 +38,8 @@ class Downloader:
         self.USER = self.config.user
 
         self.blacklist = self.config.blacklist
-        if run:
-            self.get_data()
+
+        self.get_data()
 
     def get_data(self):
         for section in self.config.posts:

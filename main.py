@@ -29,6 +29,7 @@ class Downloader:
         config_loc: str = "config.ini",
     ):  # Self-starting function
         os.makedirs(self.filepath, exist_ok=True)
+
         logger.info("Starting Booru downloader [v1.0.0]")
         self.config = cfg.Config(config_loc)
         self.session = backend.get_session(self.config.useragent)  # Get useragent

@@ -11,6 +11,7 @@ from library import backend, config
 logger = logging.getLogger(__name__)
 logger = backend.set_logger(logger, "tests.log")
 
+
 # print("  SETUP otherarg", param)
 # yield param
 # print("  TEARDOWN otherarg", param)
@@ -29,7 +30,7 @@ def create_config():
     }
     # will trigger blacklist
     conf_result.parser["Main Test/Blacklist_Trigger"] = {
-        "days": "60",
+        "days": "5",
         "ratings": "s, q",
         "min_score": "20",
         "tags": "dog",
@@ -38,7 +39,7 @@ def create_config():
     }
     # will ignore blacklist AND change allowed types to only png
     conf_result.parser["Main Test/Ignore_Blacklist_PNG_Only"] = {
-        "days": "60",
+        "days": "5",
         "ratings": "s, q",
         "min_score": "20",
         "tags": "dog",
@@ -47,7 +48,7 @@ def create_config():
     }
     # will trigger min_faves
     conf_result.parser["Main Test/Min_Faves_Trigger"] = {
-        "days": "60",
+        "days": "5",
         "ratings": "s",
         "min_score": "20",
         "min_faves": "200",
@@ -57,7 +58,7 @@ def create_config():
     }
     # will trigger rating miss
     conf_result.parser["Main Test/Rating_Trigger"] = {
-        "days": "60",
+        "days": "5",
         "ratings": "q, e",
         "min_score": "200",
         "min_faves": "200",
@@ -85,7 +86,7 @@ def create_config():
 
 @pytest.fixture(
     params=[False, True],
-    ids=["Fake API [Force Program Crash]", "Real API [download with API key]"],
+    ids=["Fake API [Force Program Crash]", "Real API [Download with API key]"],
 )
 def create_config_api(request, create_config):
     correct_keys = request.param
@@ -105,6 +106,25 @@ def test_download_files(create_config):
     result = main.Downloader("test_main.ini")
     path = os.path.normpath(result.path + "/downloads/Main Test/")
     assert os.path.isdir(path)
+
+
+def test_bad_download():
+    """Runs through "already exists" code paths
+    Removes files afterward for next test
+    """
+    conf_result = config.Config("test.ini")
+    conf_result.parser["URI"]["uri"] = os.environ["URI"]  # Required test field
+    conf_result._parse_config()
+    with open(conf_result.filepath, "w") as cfg:
+        conf_result.parser.write(cfg)
+    result = main.Downloader("test.ini")
+    result.download_file(
+        result.session,
+        f'{os.environ["URI"]}/bad_download.png',
+        "Bad Data",
+        "bad_download",
+    )
+    os.remove(conf_result.filepath)
 
 
 def test_download_files_already_exist(create_config):

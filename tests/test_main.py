@@ -31,7 +31,7 @@ def create_config():
     conf_result.parser["Main Test/Blacklist_Trigger"] = {
         "days": "60",
         "ratings": "s, q",
-        "min_score": "200",
+        "min_score": "20",
         "tags": "dog",
         "ignore_tags": "",
         "allowed_types": "",
@@ -40,7 +40,7 @@ def create_config():
     conf_result.parser["Main Test/Ignore_Blacklist_PNG_Only"] = {
         "days": "60",
         "ratings": "s, q",
-        "min_score": "200",
+        "min_score": "20",
         "tags": "dog",
         "ignore_tags": "dog",
         "allowed_types": "png",

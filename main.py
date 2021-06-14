@@ -106,7 +106,6 @@ class Downloader:
 
         # Sections stuff
         max_time = section.days * 86400  # seconds
-        min_score = section.min_score
         min_faves = section.min_faves
 
         package = self.package
@@ -172,7 +171,7 @@ class Downloader:
                     + category["lore"]
                     + category["meta"]
                 )
-                score = post["score"]["total"]
+                # score = post["score"]["total"] #TODO unused but could be useful
                 faves = post["fav_count"]
                 rating = post["rating"]
                 post_time = datetime.fromisoformat(post["created_at"]).timestamp()
@@ -185,12 +184,6 @@ class Downloader:
                     # print(f'Debug: Too low time {post_id}')
                     last_id = 0
                     break
-                if score < min_score:  # invalid score
-                    logger.debug(
-                        f"Post {post_id} has {score} score "
-                        f"(Lower than criteria of {min_score}) - Skipping file"
-                    )
-                    continue
                 if faves < min_faves:  # invalid favcount
                     logger.debug(
                         f"Post {post_id} has {faves} favorites "

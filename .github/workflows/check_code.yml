@@ -59,6 +59,8 @@ jobs:
       PYTHON: '3.9'
       OS: ubuntu-latest
       URI: ${{ secrets.URI }}
+      API: ${{ secrets.API }}
+      USER: ${{ secrets.USER }}
     steps:
       - uses: actions/checkout@master
       - name: Setup Python

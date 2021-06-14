@@ -115,7 +115,7 @@ def request_uri(session, url, package=[], auth=None, silent=False):
         return result
     else:
         if not silent:
-            print(
+            logger.error(
                 "Request for {0} failed. Error code {1}".format(url, result.status_code)
             )
         return result.status_code

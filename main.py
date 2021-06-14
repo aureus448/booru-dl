@@ -9,6 +9,8 @@ import typing
 from datetime import datetime
 from time import sleep
 
+import requests
+
 from library import backend
 from library import config as cfg
 
@@ -126,9 +128,11 @@ class Downloader:
                     package,
                     (self.USER, self.API),
                 )
-                current_batch = (
-                    current_batch.json()["posts"] if type(current_batch) != int else []
-                )
+                if type(current_batch) != int:
+                    current_batch = current_batch.json()["posts"]
+                else:
+                    raise (requests.RequestException(current_batch))
+
             else:
                 current_batch = backend.request_uri(
                     self.session, self.config.paths["POST_URI"], package

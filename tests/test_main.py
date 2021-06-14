@@ -30,30 +30,30 @@ def create_config():
     }
     # will trigger blacklist
     conf_result.parser["Main Test/Blacklist_Trigger"] = {
-        "days": "5",
+        "days": "20",
         "ratings": "s, q",
         "min_score": "20",
-        "tags": "dog",
+        "tags": "canine",
         "ignore_tags": "",
         "allowed_types": "",
     }
     # will ignore blacklist AND change allowed types to only png
     conf_result.parser["Main Test/Ignore_Blacklist_PNG_Only"] = {
-        "days": "5",
+        "days": "20",
         "ratings": "s, q",
-        "min_score": "20",
-        "tags": "dog",
-        "ignore_tags": "dog",
+        "min_score": "100",
+        "tags": "canine",
+        "ignore_tags": "canine",
         "allowed_types": "png",
     }
     # will trigger min_faves
     conf_result.parser["Main Test/Min_Faves_Trigger"] = {
-        "days": "5",
+        "days": "20",
         "ratings": "s",
-        "min_score": "20",
+        "min_score": "100",
         "min_faves": "200",
-        "tags": "dog",
-        "ignore_tags": "dog",
+        "tags": "canine",
+        "ignore_tags": "canine",
         "allowed_types": "png",
     }
     # will trigger rating miss
@@ -62,17 +62,8 @@ def create_config():
         "ratings": "q, e",
         "min_score": "200",
         "min_faves": "200",
-        "tags": "dog",
-        "ignore_tags": "dog",
-        "allowed_types": "png",
-    }
-    # will download more than others on purpose
-    conf_result.parser["Main Test/Multi_Search_Trigger"] = {
-        "days": "20",
-        "ratings": "s, q",
-        "min_score": "20",
-        "tags": "dog",
-        "ignore_tags": "dog",
+        "tags": "canine",
+        "ignore_tags": "canine",
         "allowed_types": "png",
     }
 

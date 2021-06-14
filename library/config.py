@@ -252,8 +252,8 @@ class Config:
             "allowed_types": "jpg, png, gif",
         }
         config["Blacklist"] = {
-            "; Hide stuff you don't want, in this example dogs": None,
-            "tags": "dog",
+            "; Hide stuff you don't want, in this example canines": None,
+            "tags": "canine",
         }
         config["Other"] = {
             "; Organize by file extension into subfolders [Not working at the moment]": None,
@@ -272,9 +272,9 @@ class Config:
             "; Per-section allowed extension types (gif, webm, png etc. different from default)"
             " [Include all or leave blank]": None,
             "allowed_types": "",
-            "; ignore_tags indicate tags to ignore from blacklist (dog used in this example, "
-            "will allow any post with dogs to come through)": None,
-            "ignore_tags": "dog",
+            "; ignore_tags indicate tags to ignore from blacklist (canine used in this example, "
+            "will allow any post with canines to come through)": None,
+            "ignore_tags": "canine",
             "; blacklist_tags indicate tags to add to blacklist [For just the section] "
             "(canine used in this example, will disallow any post with canine to come through)": None,
             "blacklist_tags": "canine",

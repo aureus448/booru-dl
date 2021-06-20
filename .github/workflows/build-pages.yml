@@ -1,0 +1,30 @@
+name: build-sphinx-to-gh-pages
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+
+jobs:
+
+  build_sphinx_job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.9
+      - name: Setup Build Environment
+        run: |
+          pip install -r requirements-dev.txt
+      - name: Run build script for Sphinx pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: "chmod +x docs/build.sh
+           && docs/build.sh"
+        shell: bash

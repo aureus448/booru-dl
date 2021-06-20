@@ -11,8 +11,8 @@ from time import sleep
 
 import requests
 
-from library import backend
-from library import config as cfg
+from src.library import backend
+from src.library import config as cfg
 
 logger = logging.getLogger(__file__)
 

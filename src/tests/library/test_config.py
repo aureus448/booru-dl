@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from library import config
+from src.library import config
 
 
 def test__get_config(collect_config):

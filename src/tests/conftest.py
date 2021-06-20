@@ -1,6 +1,6 @@
 import pytest
 
-from library import backend, config
+from src.library import backend, config
 
 
 @pytest.fixture()

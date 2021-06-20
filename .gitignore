@@ -11,7 +11,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
+src/downloads/
 eggs/
 .eggs/
 lib/
@@ -127,8 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/library/uri.ini
-/config.ini
+/src/library/uri.ini
+/src/config.ini
 /todo notes
-/downloads/
+/src/downloads/
 /do_not_include.py

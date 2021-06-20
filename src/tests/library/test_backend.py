@@ -4,7 +4,7 @@ import os
 import pytest
 from requests.sessions import Session
 
-from library import backend, config
+from src.library import backend, config
 
 
 def test_set_logger():

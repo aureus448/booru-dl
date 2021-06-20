@@ -15,9 +15,9 @@ Welcome to booru-dl's documentation!
    files/config
 
 .. autosummary::
-   main
-   library.config
-   library.backend
+   booru_dl.main
+   booru_dl.library.config
+   booru_dl.library.backend
 
 
 Indices and tables

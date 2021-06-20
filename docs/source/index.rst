@@ -13,12 +13,10 @@ Welcome to booru-dl's documentation!
    files/main
    files/backend
    files/config
-   files/constants
 
 .. autosummary::
    main
    library.config
-   library.constants
    library.backend
 
 

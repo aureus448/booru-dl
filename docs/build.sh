@@ -23,6 +23,13 @@ git checkout -b gh-pages
 # directories that start with an underscore (_) can remain
 touch .nojekyll
 
+# Add README
+cat > README.md <<EOF
+# README for the GitHub Pages Branch
+This branch is simply a cache for the website served for ${GITHUB_REPOSITORY},
+and is  not intended to be viewed on github.com.
+EOF
+
 # Copy the resulting html pages built from Sphinx to the gh-pages branch
 git add .
 

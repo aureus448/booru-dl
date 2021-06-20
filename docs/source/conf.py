@@ -13,7 +13,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../../src"))  # Main directory
+sys.path.insert(0, os.path.abspath("../../"))  # Main directory
 
 
 # -- Project information -----------------------------------------------------

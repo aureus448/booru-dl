@@ -5,8 +5,8 @@ import shutil
 import pytest
 import requests
 
-from src import main
-from src.library import backend, config
+from booru_dl import main
+from booru_dl.library import backend, config
 
 logger = logging.getLogger(__name__)
 logger = backend.set_logger(logger, "tests.log")

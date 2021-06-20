@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from src.library import config
+from booru_dl.library import config
 
 
 def test__get_config(collect_config):

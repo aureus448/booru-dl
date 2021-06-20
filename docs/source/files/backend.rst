@@ -1,7 +1,7 @@
 backend.py
 ==========
 
-.. automodule:: library.backend
+.. automodule:: booru_dl.library.backend
     :members:
     :undoc-members:
     :show-inheritance:

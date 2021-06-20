@@ -1,6 +1,6 @@
 import pytest
 
-from src.library import backend, config
+from booru_dl.library import backend, config
 
 
 @pytest.fixture()

@@ -1,7 +1,7 @@
 config.py
 =========
 
-.. automodule:: library.config
+.. automodule:: booru_dl.library.config
     :members:
     :undoc-members:
     :show-inheritance:

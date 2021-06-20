@@ -4,7 +4,7 @@
 ## Linter GitHub Actions ##
 ###########################
 ###########################
-name: Lint Code Base (All)
+name: Lint Code Base
 
 #############################
 # Start the job on all push #
@@ -41,6 +41,7 @@ jobs:
       - name: Lint Code Base
         uses: docker://ghcr.io/github/super-linter:slim-v4
         env:
+          VALIDATE_PYTHON_ISORT: false
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

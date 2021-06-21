@@ -560,7 +560,7 @@ rinohtype = "*"
 
 [[package]]
 name = "rinohtype"
-version = "0.5.2"
+version = "0.5.3"
 description = "The Python document processor"
 category = "dev"
 optional = false
@@ -762,7 +762,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "4f7cf8b1a36b1a063088158d2dcaa6e324fc22e3de7d7c3f1e997c713f26c4f4"
+content-hash = "ae2a0afe204794088edf35aa7bf00b2caefdc61c86305f574ffe5ec153daa05f"
 
 [metadata.files]
 alabaster = [
@@ -1127,8 +1127,8 @@ rinoh-typeface-texgyrepagella = [
     {file = "rinoh_typeface_texgyrepagella-0.1.1-py3-none-any.whl", hash = "sha256:0144e3b828a31b405ab9be1dec67f48be360d9f86d109578924fd1d7e0e1ded6"},
 ]
 rinohtype = [
-    {file = "rinohtype-0.5.2-py3-none-any.whl", hash = "sha256:4a77567804febf987045f4ab333436ad4d68d62d743a779c50d91713d62e09a2"},
-    {file = "rinohtype-0.5.2.tar.gz", hash = "sha256:17c7f47fde859bf588750bf198b01fe48befd3c8cd9af662b39383653dc7a228"},
+    {file = "rinohtype-0.5.3-py3-none-any.whl", hash = "sha256:8bd4f0dd188026ede65286eab4bcfb3bffc594fe4bca7cf1f0125ccd35ff995a"},
+    {file = "rinohtype-0.5.3.tar.gz", hash = "sha256:7b4dea40df49a7f623ad0382b3802cb72a7e72d0e30facba135cd86b977b5762"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},

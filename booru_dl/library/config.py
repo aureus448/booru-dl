@@ -1,3 +1,36 @@
+"""Collects a provided configuration and provides parsing of data collected
+
+A default configuration will be created on first run if none is provided.
+A configuration file is required to have the following data sections/fields:
+
+    #. URI
+        * uri: URL/URI of booru website (Ex. https://google.com)
+        * api: ``OPTIONAL`` API key for the booru website
+        * user: ``SEMI-OPTIONAL`` Username for the booru website
+    #. Default
+        * days: Default amount of days to search for
+        * ratings: Default rating(s) to search for
+        * min_score: Default minimum score for each post
+        * min_favs: Default minimum favorites for each post
+        * allowed_types: Default allowed filetypes for all sections
+    #. Other
+        * organize_by_type: Whether files should be organized by filetype in each section
+            Example: For section ``Dog``, ``gif`` will go into ``Dog/gif`` sub-folder
+    #. Blacklist
+        * tags: list of tags to ignore
+            Example: ``cat`` - what a disgusting creature
+    #. <Sections to Search #1 -> #n>
+        Options available in each section are "Optional" other than tag which is ``REQUIRED``. If data is missing
+        for any field other than tag, the data is collected from the default provided in the configuration file.
+
+        * days: days to search for section
+        * ratings: ratings to search for section
+        * min_score: minimum score to search for in a section
+        * tags: Tags to search for the section
+        * ignore_tags: Tags to ignore for this specific section
+            Example: ``cat`` in blacklist and ignore_tags means for this specific section ``cat`` is allowed
+        * allowed_types: List of filetypes to allow for a specific section
+"""
 # mypy: ignore-errors
 
 import configparser
@@ -10,38 +43,57 @@ logger = logging.getLogger(__file__)
 
 
 class Section:
-    """
-    Enum-esque class containing expected data per-post
-    """
+    """Class containing filtering data for use in search and collection"""
 
-    name: str = ""
-    days: int = 0
-    rating: List[str] = []
-    min_score: int = 0
-    min_faves: int = 0
-    tags: List[str] = []
-    ignore_tags: List[str] = []
-    allowed_types: List[str] = []
+    name: str  #: Name of section (Ex. ``Dog``)
+    days: int  #: Days to search for on booru
+    rating: List[str]  #: Rating(s) to search for
+    min_score: int  #: Minimum score of section posts
+    min_faves: int  #: Minimum favorites of section posts
+    tags: List[str]  #: Tags for section posts
+    ignore_tags: List[
+        str
+    ]  #: Tags to ignore for this specific section (Allows skipping blacklist)
+    allowed_types: List[
+        str
+    ]  #: List of file types allowed per section (Allows changing file-types per section)
 
 
 class Config:
     """Configuration of booru settings
 
-    Expects a config.ini file locally in order to work,
+    Expects a ``config.ini`` file in a directory above the file in order to work,
     however is able to create one if necessary
+
+    Note:
+        ``config.ini`` (or any provided config using the ``ini`` attribute) is
+        collected from the parent directory from the ``Config()`` class. What this
+        means is if the ``config.py`` file is located as follows::
+
+            /                   - Project Root
+            /library/config.py  - Location of config.py
+            /main.py            - Location of main.py
+            /*.ini              - Location of ini collected (Where * is name provided in ini attribute)
+
     """
 
     # Default values for config
-    path = os.path.dirname(__file__)  # path to provide to functions using this class
-    blacklist: List[str] = []
-    default_days: int = 0
-    default_rating: List[str] = []
-    default_min_score: int = 0
-    default_min_fav: int = 0
-    organize_by_type: bool = False
-    posts: Dict[str, Section] = dict()
+    blacklist: List[
+        str
+    ]  #: Blacklist attribute containing all tags to ignore on booru posts
+    default_days: int  #: Default amount of days to check
+    default_rating: List[str]  #: Default rating of posts on the booru site
+    default_min_score: int  #: Default minimum score of posts on the booru site
+    default_min_fav: int  #: Default minimum favorite amount of posts on the booru site
+    organize_by_type: bool  #: Whether to organize file types within specific sub-folders
+    posts: Dict[
+        str, Section
+    ]  #: Dictionary of all sections to search for within the given config
 
     def __init__(self, ini: str = "config.ini"):
+        self.path: str = os.path.dirname(
+            __file__
+        )  #: Directory provided to functions within the class
         # Collect needed metadata
         self.parser = self._get_config(ini)
         self.useragent = self._get_useragent()
@@ -53,14 +105,16 @@ class Config:
         self._parse_config()
 
     def _get_config(self, ini: str = "config.ini") -> configparser.ConfigParser:
-        """Given config.ini collects the config to use
+        """Given ``config.ini`` collects the config to use
 
         Args:
-            ini (str): Defaults to config.ini, file name to use for configuration
-                Expected to be just the file name. DO NOT PASS AN ABSOLUTE PATH.
+            ini (str): Defaults to ``config.ini``, file name to use for configuration
+
+        Warnings:
+            ``ini`` is expected to be just the filename with extension. DO NOT PASS AN ABSOLUTE PATH.
 
         Returns:
-            parser (configparser.ConfigParser): Configuration file for project
+            configparser.ConfigParser: Configuration file for project
         """
         path = pathlib.PurePath(f"{self.path}/../{ini}")
         self.filepath = os.path.abspath(path)
@@ -75,6 +129,11 @@ class Config:
             return self._default_config(ini)
 
     def _get_useragent(self) -> str:
+        """Creates a useragent string for use
+
+        Returns:
+            str: Useragent to be provided during POST requests
+        """
         if (
             "URI" in self.parser
             and "user" in self.parser["URI"]
@@ -97,7 +156,7 @@ class Config:
             ini (str): Defaults to uri.ini, file name to use for configuration
 
         Returns:
-            uri (str): A URI to use
+            str: The URI of the booru site
         """
         if "URI" in self.parser and "uri" in self.parser["URI"]:
             uri = self.parser["URI"]["uri"]
@@ -108,6 +167,12 @@ class Config:
         return uri
 
     def _get_api_key(self) -> Tuple[str, str]:
+        """Collects the api and username for use in POST requests if provided
+
+
+        Returns:
+            Tuple[str, str]: A tuple containing ``(api_key, user_name)`` or ``('','')`` if undefined
+        """
         # If provided api key for booru - some require this
         if "api" in (parse := self.parser["URI"]) and "user" in parse:
             logger.info(
@@ -118,14 +183,18 @@ class Config:
             logger.info("No API/Username found - Accepted behavior")
             return "", ""
 
-    def _get_booru_data(self) -> dict:
+    def _get_booru_data(self) -> Dict[str, str]:
         """Given a URI provides a dictionary of expected booru website APIs
 
         Warnings:
             Doesn't check provided uri for accuracy at the moment
 
         Returns:
-            booru_data (dict): Dictionary of expected available URIs for a booru website
+            Dict[str, str]: Dictionary of *expected* available URIs for a booru website
+
+        Note:
+            URIs available per booru is different, this contains a basic setup based on guesses.
+            Failure to collect URIs properly should be submitted to the dev for future improvement.
         """
 
         return dict(
@@ -134,7 +203,17 @@ class Config:
             ALIAS_URI=f"{main_uri}/tag_aliases.json",
         )
 
-    def _parse_config(self):
+    def _parse_config(self) -> None:
+        """Parses the config provided by ``__init__()`` for sections to search
+
+        Also collects and determines defaults, blacklist, and any special fields per-section as needed.
+
+        Note:
+            See module documentation for a full list of available fields.
+
+        Returns:
+            None
+        """
         for section in self.parser.sections():
             section_check = section.lower()
             logger.debug(f"Working through section {section}")
@@ -212,7 +291,17 @@ class Config:
                     )
                 )
 
-    def __get_key(self, key: str, section: str, default: object):
+    def __get_key(self, key: str, section: str, default: object) -> object:
+        """Collects data from the ``configparser.Configparser`` class if available, or returns default value
+
+        Args:
+            key (str): Key to search for in config dictionary
+            section (str): Section name (provided to indicate errors in ``logger``)
+            default (object): Default state of requested value
+
+        Returns:
+            object: Value for section if found or default if missing
+        """
         if key in (data := self.parser[section]):
             return data[key] if data[key] else default
         else:
@@ -224,8 +313,15 @@ class Config:
     def _default_config(self, ini: str) -> configparser.ConfigParser:
         """Creates default config if config doesn't exist
 
+        Args:
+            ini (str): Name of output file
+
+        Note:
+            ``ini`` defaults to ``config.ini`` if left alone in class ``__init__()``
+
         Returns:
-            None
+            configparser.ConfigParser: A created default configuration with included comments
+            for user understanding of options available
         """
         path = pathlib.PurePath(f"{self.path}/../{ini}")
         config = configparser.ConfigParser(allow_no_value=True)

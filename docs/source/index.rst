@@ -3,8 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to booru-dl's documentation!
+Booru-Dl Documentation by @aureus448
 ====================================
+
+Welcome to the documentation for the `booru-dl <https://github.com/aureus448/booru-dl>`_ project by
+`@aureus448 <https://github.com/aureus448>`_
+
+Please see the list of files and documentation for each file below:
 
 .. toctree::
    :maxdepth: 3

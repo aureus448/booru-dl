@@ -112,7 +112,7 @@ class Config:
     organize_by_type: bool  #: Whether to organize file types within specific sub-folders
     posts: Dict[
         str, Section
-    ]  #: Dictionary of all sections to search for within the given config
+    ] = dict()  #: Dictionary of all sections to search for within the given config
 
     def __init__(self, ini: str = "config.ini"):
         self.path: str = os.path.dirname(
@@ -315,7 +315,7 @@ class Config:
                     )
                 )
 
-    def __get_key(self, key: str, section: str, default: object) -> object:
+    def __get_key(self, key: str, section: str, default: object) -> any:
         """Collects data from the ``configparser.Configparser`` class if available, or returns default value
 
         Args:

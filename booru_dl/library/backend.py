@@ -110,7 +110,7 @@ def get_session(useragent: str) -> requests.Session:
 def request_uri(
     session: requests.Session,
     url: str,
-    package: typing.Dict[str, object],
+    package: typing.Dict[str, object] = None,
     auth: typing.Tuple[str, str] = None,
     silent: bool = False,
 ) -> object:

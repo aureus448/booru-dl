@@ -1,5 +1,14 @@
-"""
-Main entrypoint of program. Docs TBD.
+"""Downloader for the booru-dl program
+
+Contains the main class ``Downloader()`` that is used to:
+    * Collect configuration data
+    * Search Sections from the config
+    * Download files from the config
+
+To perform these functions, ``Downloader()`` uses the ``config.Section()`` and ``config.Config()``
+classes from ``library/config.py`` and collects session data from ``library/backend.py``
+
+Please see :doc:`config` and :doc:`backend` for more details on how these library files are used.
 """
 import logging
 import os
@@ -18,16 +27,25 @@ logger = logging.getLogger(__file__)
 
 
 class Downloader:
-    blacklist: typing.List[str] = []
-    package: typing.Dict[str, object] = {}
+    """Download class for the Booru using a given config file
 
-    path = os.path.dirname(__file__)
-    filepath = pathlib.PurePath(path + "/downloads")
+    Args:
+        config_loc (str): Default of ``config.ini``, any config file provided
+
+    Warnings:
+        ``config_loc`` must be of type ``str`` and not contain anything other than the file name.
+        The file should be located in same directory as this python file.
+    """
 
     def __init__(
         self,
         config_loc: str = "config.ini",
     ):  # Self-starting function
+        self.blacklist: typing.List[str] = []
+        self.package: typing.Dict[str, object] = {}
+
+        self.path = os.path.dirname(__file__)
+        self.filepath = pathlib.PurePath(self.path + "/downloads")
         os.makedirs(self.filepath, exist_ok=True)
 
         logger.info("Starting Booru downloader [v1.0.0]")
@@ -43,6 +61,12 @@ class Downloader:
         self.get_data()
 
     def get_data(self):
+        """Collects all data from the sections determined on class instantiation
+
+        For each section to download, takes the criteria provided and POST requests
+        the booru site provided until a flag is reached (eg. Past days allowed, end of
+        provided input from booru site)
+        """
         for section in self.config.posts:
             logger.info(f'Beginning Download of section "{section}"')
             sct: cfg.Section = self.config.posts[section]
@@ -57,8 +81,25 @@ class Downloader:
             # DEBUG print(self.package)
             self.get_posts(sct)
 
-    def format_package(self, tags, limit: int = 320, before_id: int = 100000000):
-        """Formats package for session handler"""
+    def format_package(
+        self, tags: typing.List[str], limit: int = 320, before_id: int = 100000000
+    ):
+        """Formats package for session handler
+
+        Package is a attribute used across the class to POST request data from
+        the booru site, and this function provides the proper format for all
+        other functions in the class that use ``self.package``.
+
+        Args:
+            tags (list): List of tags to search for.
+            limit (int): Amount of posts to collect from the booru (Max of 320 for most websites)
+            before_id (int): Last post ID to ignore (used to filter search to a certain page
+                on the booru website)
+
+        Warnings:
+            ``tags`` attribute must be limited to 4 tags or less to properly be
+            used in most booru websites
+        """
         # Session package
         package = {
             "page": f"b{before_id}",
@@ -68,8 +109,20 @@ class Downloader:
 
         self.package = package
 
-    def download_file(self, session, url, section, file_name):
-        """Downloads the given file"""
+    def download_file(
+        self, session: requests.Session, url: str, section: str, file_name: str
+    ):
+        """Downloads the given file url to a provided Section folder
+
+        Args:
+            session (requests.Session): A user-agent created by the backend script for web handling
+            url (str): URL/URI of the exact location of the file to download
+            section (str): Section Name to place file within (Can be a path-like string eg. ``'foo/bar'``)
+            file_name (str): Name to be used for the file
+
+        Returns:
+            (int): 0 if successful, or -1 if a problem occurs
+        """
         # TODO optional file sorting
         file_name = (
             file_name + "." + (url.split("/")[-1].split(".")[-1])
@@ -101,8 +154,16 @@ class Downloader:
             # DEBUG to file
             return -1
 
-    def get_posts(self, section):
-        """Collects all posts given a certail config section and its respective metadata"""
+    def get_posts(self, section: cfg.Section):
+        """Collects all posts given a certain config section and its respective metadata
+
+        Note:
+            The section attribute contains many fields required for determination of which post(s)
+            to collect for a given Section, please see documentation of the Section class within :doc:`config`
+
+        Args:
+            section (cfg.Section): Section class containing all metadata for the requested section
+        """
         # TODO check tag validity
 
         # Sections stuff

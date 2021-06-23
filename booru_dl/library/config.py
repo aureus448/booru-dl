@@ -44,13 +44,14 @@ Note:
     appropriate data where missing. Anything not listed as ``OPTIONAL`` is therefore required to prevent the code
     from crashing and/or unexpected code behavior.
 
-    For example, when data is missing for defaults, the defaults are set to::
+    For example, when data is missing for defaults, the [Default] section is set to::
 
-        days: 20 days
-        ratings: s
-        min_score: 20
-        min_faves: 0
-        allowed_types: jpg, gif, png
+        [Default]
+        days = 20
+        ratings = s
+        min_score = 20
+        min_faves = 0
+        allowed_types = jpg, gif, png
 
     And in this vein, missing section data is set to the defaults values either provided above or in the config.
 """

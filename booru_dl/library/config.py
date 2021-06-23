@@ -3,33 +3,56 @@
 A default configuration will be created on first run if none is provided.
 A configuration file is required to have the following data sections/fields:
 
-    #. URI
-        * uri: URL/URI of booru website (Ex. https://google.com)
-        * api: ``OPTIONAL`` API key for the booru website
-        * user: ``SEMI-OPTIONAL`` Username for the booru website
-    #. Default
-        * days: Default amount of days to search for
-        * ratings: Default rating(s) to search for
-        * min_score: Default minimum score for each post
-        * min_favs: Default minimum favorites for each post
-        * allowed_types: Default allowed filetypes for all sections
-    #. Other
-        * organize_by_type: Whether files should be organized by filetype in each section
-            Example: For section ``Dog``, ``gif`` will go into ``Dog/gif`` sub-folder
-    #. Blacklist
-        * tags: list of tags to ignore
-            Example: ``cat`` - what a disgusting creature
-    #. <Sections to Search #1 -> #n>
-        Options available in each section are "Optional" other than tag which is ``REQUIRED``. If data is missing
-        for any field other than tag, the data is collected from the default provided in the configuration file.
+#. URI
+    * uri: URL/URI of booru website (Ex. https://google.com)
+    * ``OPTIONAL`` api: API key for the booru website
+    * ``SEMI-OPTIONAL`` user: Username for the booru website
 
-        * days: days to search for section
-        * ratings: ratings to search for section
-        * min_score: minimum score to search for in a section
-        * tags: Tags to search for the section
-        * ignore_tags: Tags to ignore for this specific section
-            Example: ``cat`` in blacklist and ignore_tags means for this specific section ``cat`` is allowed
-        * allowed_types: List of filetypes to allow for a specific section
+#. Default
+    * ``OPTIONAL`` days: Default amount of days to search for
+    * ``OPTIONAL`` ratings: Default rating(s) to search for
+    * ``OPTIONAL`` min_score: Default minimum score for each post
+    * ``OPTIONAL`` min_favs: Default minimum favorites for each post
+    * ``OPTIONAL`` allowed_types: Default allowed filetypes for all sections
+
+#. Other
+    * ``OPTIONAL`` organize_by_type: Whether files should be organized by filetype in each section
+
+        Example: For section ``Dog``, gifs will go into a ``Dog/gif`` sub-folder
+
+#. Blacklist
+    * ``OPTIONAL`` tags: list of tags to ignore
+
+        Example: ``cat`` - what a disgusting creature
+
+#. <Sections to Search #1 -> #n>
+    If data is missing for any field other than tag, the data is collected from the
+    default provided in the configuration file.
+
+    * tags: Tags to search for the section
+    * ``OPTIONAL`` days:  days to search for section
+    * ``OPTIONAL`` ratings: ratings to search for section
+    * ``OPTIONAL`` min_score: minimum score to search for in a section
+    * ``OPTIONAL`` ignore_tags: Tags to ignore for this specific section
+
+        Example: ``cat`` in blacklist and ignore_tags means for this specific section ``cat`` is allowed
+
+    * ``OPTIONAL`` allowed_types: List of filetypes to allow for a specific section
+
+Note:
+    Attributes that are listed as ``OPTIONAL`` mean that the code is designed to auto-fill these fields with
+    appropriate data where missing. Anything not listed as ``OPTIONAL`` is therefore required to prevent the code
+    from crashing and/or unexpected code behavior.
+
+    For example, when data is missing for defaults, the defaults are set to::
+
+        days: 20 days
+        ratings: s
+        min_score: 20
+        min_faves: 0
+        allowed_types: jpg, gif, png
+
+    And in this vein, missing section data is set to the defaults values either provided above or in the config.
 """
 # mypy: ignore-errors
 

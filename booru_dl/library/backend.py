@@ -1,16 +1,26 @@
-"""
-Backend for booru access via requests
+"""Backend for booru access via requests
+
+Primarily used to POST request the booru website, collect a Requests session, and setup logging for all files.
 """
 import logging
+import typing
 
-from requests.sessions import Session
+import requests
 
 logger = logging.getLogger(__file__)
 
 
-def get_session(useragent: str):
-    """Offers a Session for requests"""
-    session = Session()
+def get_session(useragent: str) -> requests.Session:
+    """Offers a Session for requests
+
+    Args:
+        useragent (str): Name to use for user-agent when requesting of booru website.
+            Defaults to ``Booru DL (user unknown)`` if no user_name provided
+
+    Returns:
+        requests.Session: Requests Session object with correctly formatted user-agent
+    """
+    session = requests.Session()
     session.headers.update({"User-Agent": useragent})
     return session
 
@@ -97,11 +107,24 @@ def get_session(useragent: str):
 #     pass
 
 
-def request_uri(session, url, package=[], auth=None, silent=False):
-    """Wrapper function for requests - ensures 200 code otherwise fails
+def request_uri(
+    session: requests.Session,
+    url: str,
+    package: typing.Dict[str, object],
+    auth: typing.Tuple[str, str] = None,
+    silent: bool = False,
+) -> object:
+    """POST requests a given booru website for data
 
     Args:
-        auth:
+        session (requests.Session): Session to use in POST requesting website
+        url (str): URL to request data from
+        package (dict): Dictionary containing data to send to URL
+        auth (tuple): Tuple containing api_key and user_name if provided
+        silent (bool): Whether to provide log data silently (DEBUG level) or notify of errors (ERROR level)
+
+    Returns:
+        object: Error code if failure or data if successful
     """
     if package and auth:
         result = session.get(url, params=package, auth=auth)
@@ -116,6 +139,10 @@ def request_uri(session, url, package=[], auth=None, silent=False):
     else:
         if not silent:
             logger.error(
+                "Request for {0} failed. Error code {1}".format(url, result.status_code)
+            )
+        else:
+            logger.debug(
                 "Request for {0} failed. Error code {1}".format(url, result.status_code)
             )
         return result.status_code
@@ -150,7 +177,7 @@ def request_uri(session, url, package=[], auth=None, silent=False):
 #         time.sleep(sleep_time / 1000)
 
 
-def set_logger(log: logging.Logger, name: str):
+def set_logger(log: logging.Logger, name: str) -> logging.Logger:
     """Set up of logging program based on a provided logging.Logger
 
     Args:
@@ -158,7 +185,7 @@ def set_logger(log: logging.Logger, name: str):
         name (str): Output file name
 
     Returns:
-
+        logging.Logger: Logger formatted with log format specified (by me)
     """
     log.setLevel(logging.DEBUG)
 

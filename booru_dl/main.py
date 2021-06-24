@@ -24,8 +24,6 @@ import requests
 from booru_dl.library import backend
 from booru_dl.library import config as cfg
 
-logger = logging.getLogger(__file__)
-
 
 class Downloader:
     """Download class for the Booru using a given config file
@@ -45,14 +43,21 @@ class Downloader:
         self.blacklist: typing.List[str] = []
         self.package: typing.Dict[str, object] = {}
 
-        self.path = os.path.dirname(__file__)
-        self.filepath = pathlib.PurePath(self.path + "/downloads")
+        logging.info("Starting Booru downloader [v1.0.0]")
+
+        self.path = pathlib.PurePath(".")
+        self.filepath = self.path.joinpath("downloads")
+        logging.debug(f"Root path: {os.path.abspath(self.path)}")
+        logging.debug(f"Downloads folder path: {os.path.abspath(self.filepath)}")
+
+        # Makes all needed directories
         os.makedirs(self.filepath, exist_ok=True)
 
-        logger.info("Starting Booru downloader [v1.0.0]")
+        # Collects config and Session
         self.config = cfg.Config(config_loc)
         self.session = backend.get_session(self.config.useragent)  # Get useragent
 
+        # Collects metadata
         self.URI = self.config.uri
         self.API = self.config.api
         self.USER = self.config.user
@@ -68,8 +73,9 @@ class Downloader:
         the booru site provided until a flag is reached (eg. Past days allowed, end of
         provided input from booru site)
         """
+        start = time.time()
         for section in self.config.posts:
-            logger.info(f'Beginning Download of section "{section}"')
+            logging.info(f'Beginning Download of section "{section}"')
             sct: cfg.Section = self.config.posts[section]
             # 3 tags + score + rating for filtering
             if len(sct.rating) > 1:
@@ -81,6 +87,9 @@ class Downloader:
                 )
             # DEBUG print(self.package)
             self.get_posts(sct)
+        logging.info(
+            f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
+        )
 
     def format_package(
         self, tags: typing.List[str], limit: int = 320, before_id: int = 100000000
@@ -133,7 +142,7 @@ class Downloader:
         if os.path.exists(
             filepath.joinpath(file_name)
         ):  # no point in downloading what we already have
-            logger.debug(f"File {file_name} already exists - Skipping")
+            logging.debug(f"File {file_name} already exists - Skipping")
             return 1
         else:
             os.makedirs(filepath, exist_ok=True)
@@ -146,10 +155,10 @@ class Downloader:
                 for chunk in result.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
-            logger.debug(f"Downloaded {file_name} to {filepath.joinpath(file_name)}")
+            logging.debug(f"Downloaded {file_name} to {filepath.joinpath(file_name)}")
             return file_name
         else:
-            logger.error(
+            logging.error(
                 f"Error downloading {file_name} [Status Code: {result.status_code}]"
             )
             # DEBUG to file
@@ -209,12 +218,12 @@ class Downloader:
                 if post["file"]["url"]:
                     file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
                 else:
-                    logger.warning(
+                    logging.warning(
                         f"File access for Post {post_id} blocked by site - possibly requires API access"
                     )
                     continue
                 if file_ext not in section.allowed_types:
-                    logger.debug(
+                    logging.debug(
                         f"Post {post_id} was skipped due to being extension "
                         f"[{file_ext}] (Not in allowed extensions)"
                     )
@@ -245,7 +254,7 @@ class Downloader:
                     last_id = 0
                     break
                 if faves < min_faves:  # invalid favcount
-                    logger.debug(
+                    logging.debug(
                         f"Post {post_id} has {faves} favorites "
                         f"(Lower than criteria of {min_faves}) - Skipping file"
                     )
@@ -258,12 +267,12 @@ class Downloader:
                         # A tag can be blacklist-ignored per section
                         # but will iterate through all tags to ensure there aren't any actual blacklisted ones
                         if len(section.ignore_tags) > 0 and tag in section.ignore_tags:
-                            logger.debug(
+                            logging.debug(
                                 f'Ignored blacklisted tag "{tag}" for post {post_id}, '
                                 f'due to section "{section.name}" settings'
                             )
                         else:
-                            logger.debug(
+                            logging.debug(
                                 f'Found blacklisted tag "{tag}" for post {post_id} - Skipping file'
                             )
                             blacklisted = True
@@ -288,12 +297,15 @@ class Downloader:
 
                 total_posts += 1  # If reach here post was acquired
 
-            logger.info(
+            logging.info(
                 f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
                 f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
             )
+            logging.debug(
+                f"{total_posts + skipped_files} Files collected (or cached); {searched_posts} Searched"
+            )
             if last_id == 0:
-                logger.info(
+                logging.info(
                     f"Downloaded all valid posts for the given days ({section.days})"
                 )
                 break
@@ -304,12 +316,13 @@ class Downloader:
                 loop += 1
                 package["page"] = f"b{last_id}"
         end = time.time()
-        logger.info(
+        logging.info(
             f'All done! Execution took {end - start:.2f} seconds for "{section.name}"'
         )
 
 
 if __name__ == "__main__":
-    logger = backend.set_logger(logger, "booru-dl.log")
+    logger = backend.set_logger(logging.getLogger(), "booru-dl.log")
     # Main entrypoint
     Downloader()
+    os.system("pause")  # Warn: Windows only

@@ -7,8 +7,6 @@ import typing
 
 import requests
 
-logger = logging.getLogger(__file__)
-
 
 def get_session(useragent: str) -> requests.Session:
     """Offers a Session for requests
@@ -138,11 +136,11 @@ def request_uri(
         return result
     else:
         if not silent:
-            logger.error(
+            logging.error(
                 "Request for {0} failed. Error code {1}".format(url, result.status_code)
             )
         else:
-            logger.debug(
+            logging.debug(
                 "Request for {0} failed. Error code {1}".format(url, result.status_code)
             )
         raise requests.RequestException(result.status_code)
@@ -169,7 +167,7 @@ def request_uri(
 #     if total_time < 500:
 #         sleep_time = 500 - total_time
 #         if constants.TIMING:
-#             logger.warning(
+#             logging.warning(
 #                 "Error! Faster than API Limit: Waiting {0:0.3f} ms for next function call".format(
 #                     sleep_time
 #                 )

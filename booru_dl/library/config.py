@@ -63,8 +63,6 @@ import os
 import pathlib
 from typing import Dict, List, Tuple
 
-logger = logging.getLogger(__file__)
-
 
 class Section:
     """Class containing filtering data for use in search and collection"""
@@ -114,12 +112,18 @@ class Config:
         str, Section
     ] = dict()  #: Dictionary of all sections to search for within the given config
 
-    def __init__(self, ini: str = "config.ini"):
-        self.path: str = os.path.dirname(
-            __file__
-        )  #: Directory provided to functions within the class
+    def __init__(self, ini: str):
+        self.filepath: pathlib.PurePath = pathlib.PurePath(ini)
+        self.path: pathlib.PurePath = self.filepath.parent
+
+        # Setup logging
+
+        logging.debug(f"Config Root path: {os.path.abspath(self.path)}")
+        logging.debug("Note: Above should be same as Root path")
+        logging.debug(f"Config ini path: {os.path.abspath(self.filepath)}")
+
         # Collect needed metadata
-        self.parser = self._get_config(ini)
+        self.parser = self._get_config()
         self.useragent = self._get_useragent()
         self.uri = self._get_uri()
         self.api, self.user = self._get_api_key()
@@ -128,29 +132,22 @@ class Config:
         # Create lists of data to collect
         self._parse_config()
 
-    def _get_config(self, ini: str = "config.ini") -> configparser.ConfigParser:
-        """Given ``config.ini`` collects the config to use
-
-        Args:
-            ini (str): Defaults to ``config.ini``, file name to use for configuration
-
-        Warnings:
-            ``ini`` is expected to be just the filename with extension. DO NOT PASS AN ABSOLUTE PATH.
+    def _get_config(self) -> configparser.ConfigParser:
+        """Collects the config to use using class attributes
 
         Returns:
             configparser.ConfigParser: Configuration file for project
         """
-        path = pathlib.PurePath(f"{self.path}/../{ini}")
-        self.filepath = os.path.abspath(path)
-        logger.debug(f"Path for Collecting URI config: {path}")
+        logging.debug(f"Path for Collecting URI config: {self.filepath}")
         parser = configparser.ConfigParser()
 
-        if os.path.exists(path):
-            parser.read(path)
+        if os.path.exists(self.filepath):
+            parser.read(self.filepath)
             return parser
         else:
-            logger.warning("No Config exists: Generating default")
-            return self._default_config(ini)
+            logging.warning("No Config exists: Generating default")
+            logging.warning("Please re-run the program after filling in config data")
+            return self._default_config()
 
     def _get_useragent(self) -> str:
         """Creates a useragent string for use
@@ -184,9 +181,9 @@ class Config:
         """
         if "URI" in self.parser and "uri" in self.parser["URI"]:
             uri = self.parser["URI"]["uri"]
-            logger.info(f"URI Found: {uri}")
+            logging.debug(f"URI Found: {uri}")
         else:
-            logger.error("No URI Found - Please ensure config is set up correctly")
+            logging.error("No URI Found - Please ensure config is set up correctly")
             raise ValueError
         return uri
 
@@ -199,12 +196,12 @@ class Config:
         """
         # If provided api key for booru - some require this
         if "api" in (parse := self.parser["URI"]) and "user" in parse:
-            logger.info(
+            logging.debug(
                 "Collected API and Username from URI config - Will use for Authentication"
             )
             return parse["api"], parse["user"]
         else:
-            logger.info("No API/Username found - Accepted behavior")
+            logging.debug("No API/Username found - Accepted behavior")
             return "", ""
 
     def _get_booru_data(self) -> Dict[str, str]:
@@ -240,7 +237,7 @@ class Config:
         """
         for section in self.parser.sections():
             section_check = section.lower()
-            logger.debug(f"Working through section {section}")
+            logging.debug(f"Working through section {section}")
             # Go through all sections and get results
             data = self.parser[section]
 
@@ -320,7 +317,7 @@ class Config:
 
         Args:
             key (str): Key to search for in config dictionary
-            section (str): Section name (provided to indicate errors in ``logger``)
+            section (str): Section name (provided to indicate errors in ``logging``)
             default (object): Default state of requested value
 
         Returns:
@@ -329,25 +326,20 @@ class Config:
         if key in (data := self.parser[section]):
             return data[key] if data[key] else default
         else:
-            logger.warning(
+            logging.warning(
                 f"Missing data for {key} for section {section} [Set to Default of {default}]"
             )
             return default
 
-    def _default_config(self, ini: str) -> configparser.ConfigParser:
+    def _default_config(self) -> configparser.ConfigParser:
         """Creates default config if config doesn't exist
 
-        Args:
-            ini (str): Name of output file
-
-        Note:
-            ``ini`` defaults to ``config.ini`` if left alone in class ``__init__()``
+        Uses class attributes to determine filename
 
         Returns:
             configparser.ConfigParser: A created default configuration with included comments
             for user understanding of options available
         """
-        path = pathlib.PurePath(f"{self.path}/../{ini}")
         config = configparser.ConfigParser(allow_no_value=True)
 
         config["INFO"] = {
@@ -399,7 +391,7 @@ class Config:
             "(canine used in this example, will disallow any post with canine to come through)": None,
             "blacklist_tags": "canine",
         }
-        with open(path, "w") as cfg:
+        with open(self.filepath, "w") as cfg:
             config.write(cfg)
         return config
 

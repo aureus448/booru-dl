@@ -114,7 +114,7 @@ def test__parse_config_changed_default(collect_config):
 def test__default_config():
     """Create a completely new default config using the default config path"""
     result = config.Config("new_fake_ini.ini")
-    assert "new_fake_ini.ini" in result.filepath
+    assert "new_fake_ini.ini" in result.filepath.name
     os.remove(result.filepath)  # clean up
 
 

@@ -95,7 +95,7 @@ def create_config_api(request, create_config):
 
 def test_download_files(create_config):
     result = main.Downloader("test_main.ini")
-    path = os.path.normpath(result.path + "/downloads/Main Test/")
+    path = result.path / "downloads/Main Test/"
     assert os.path.isdir(path)
 
 
@@ -123,7 +123,7 @@ def test_download_files_already_exist(create_config):
     Removes files afterward for next test
     """
     result = main.Downloader("test_main.ini")
-    path = os.path.normpath(result.path + "/downloads/Main Test/")
+    path = result.path / "downloads/Main Test/"
     assert os.path.isdir(path)
     os.remove(create_config.filepath)  # removes created config file
     shutil.rmtree(path)  # removes test directory
@@ -136,6 +136,6 @@ def test_download_files_api(create_config_api):
             main.Downloader("test_main.ini")
     else:
         result = main.Downloader("test_main.ini")
-        path = os.path.normpath(result.path + "/downloads/Main Test/")
+        path = result.path / "downloads/Main Test/"
         assert os.path.isdir(path)
         shutil.rmtree(path)  # removes test directory

@@ -12,7 +12,7 @@ on:
 jobs:
   check_date:
     runs-on: ubuntu-latest
-    name: Check if recent commit
+    name: Check For Recent Commits
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:

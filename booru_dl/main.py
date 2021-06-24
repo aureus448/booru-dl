@@ -10,6 +10,7 @@ classes from ``library/config.py`` and collects session data from ``library/back
 
 Please see :doc:`config` and :doc:`backend` for more details on how these library files are used.
 """
+# mypy: ignore-errors
 import logging
 import os
 import pathlib
@@ -190,10 +191,7 @@ class Downloader:
                     package,
                     (self.USER, self.API),
                 )
-                if type(current_batch) != int:
-                    current_batch = current_batch.json()["posts"]
-                else:
-                    raise (requests.RequestException(current_batch))
+                current_batch = current_batch.json()["posts"]
 
             else:
                 current_batch = backend.request_uri(

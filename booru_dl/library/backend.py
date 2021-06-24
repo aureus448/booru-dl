@@ -113,7 +113,7 @@ def request_uri(
     package: typing.Dict[str, object] = None,
     auth: typing.Tuple[str, str] = None,
     silent: bool = False,
-) -> object:
+) -> requests.Response:
     """POST requests a given booru website for data
 
     Args:
@@ -145,7 +145,7 @@ def request_uri(
             logger.debug(
                 "Request for {0} failed. Error code {1}".format(url, result.status_code)
             )
-        return result.status_code
+        raise requests.RequestException(result.status_code)
 
 
 # def timer(start_time, name="URI Request", optional_clarifier=""):

@@ -2,6 +2,7 @@ import logging
 import os
 
 import pytest
+import requests
 from requests.sessions import Session
 
 from booru_dl.library import backend, config
@@ -48,10 +49,10 @@ def test_request_uri_fail(get_session, package):
     Runs through silent to ensure works
     """
     config = change_uri("https://google.com")
-    result = backend.request_uri(
-        get_session, config.paths["POST_URI"], package, auth=None, silent=True
-    )
-    assert result == 404
+    with pytest.raises(requests.RequestException):
+        backend.request_uri(
+            get_session, config.paths["POST_URI"], package, auth=None, silent=True
+        )
 
 
 def test_request_uri_success(get_session, package):
@@ -67,10 +68,13 @@ def test_request_uri_success(get_session, package):
 def test_request_uri_fail_authenticated(get_session, package):
     """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
     config = change_uri(os.environ["URI"], auth=True)
-    result = backend.request_uri(
-        get_session, config.paths["POST_URI"], package, auth=(config.user, config.api)
-    )
-    assert result == 401
+    with pytest.raises(requests.RequestException):
+        backend.request_uri(
+            get_session,
+            config.paths["POST_URI"],
+            package,
+            auth=(config.user, config.api),
+        )
 
 
 def test_request_uri_success_no_package(get_session):

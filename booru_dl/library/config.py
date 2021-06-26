@@ -344,16 +344,18 @@ class Config:
                 self.posts[f"{section}"] = Section()
                 self.posts[f"{section}"].name = f"{section}"
                 self.posts[f"{section}"].days = int(
-                    self.__get_key("days", section, self.default_days)
+                    self.__get_key("days", section, self.default_days.__str__())
                 )
                 self.posts[f"{section}"].rating = self.__get_key(
-                    "ratings", section, self.default_rating
+                    "ratings", section, self.default_rating.__str__()
                 )
                 self.posts[f"{section}"].min_score = int(
-                    self.__get_key("min_score", section, self.default_min_score)
+                    self.__get_key(
+                        "min_score", section, self.default_min_score.__str__()
+                    )
                 )
                 self.posts[f"{section}"].min_faves = int(
-                    self.__get_key("min_faves", section, self.default_min_fav)
+                    self.__get_key("min_faves", section, self.default_min_fav.__str__())
                 )
                 self.posts[f"{section}"].tags = list(
                     map(str.strip, (self.__get_key("tags", section, "")).split(","))
@@ -375,7 +377,7 @@ class Config:
                     )
                 )
 
-    def __get_key(self, key: str, section: str, default: object) -> any:
+    def __get_key(self, key: str, section: str, default: str) -> str:
         """Collects data from the ``configparser.Configparser`` class if available, or returns default value
 
         Args:

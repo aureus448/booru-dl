@@ -56,11 +56,14 @@ class Downloader:
         self.session = backend.get_session(self.config.useragent)  # Get useragent
 
         # Collects metadata
+        # TODO add support for multiple uri, api_keys, and usernames - will be implemented in config
         self.URI = self.config.uri
         self.API = self.config.api
         self.USER = self.config.user
+        # TODO add support for multiple blacklists PER URI (possible but is it needed?)
         self.blacklist = self.config.blacklist
 
+    # TODO refactor get_data to be more modular in format
     def get_data(self):
         """Collects all data from the sections determined on class instantiation
 
@@ -73,6 +76,9 @@ class Downloader:
             logging.info(f'Beginning Download of section "{section_name}"')
             section: cfg.Section = self.config.posts[section_name]
             # 3 tags + score + rating for filtering
+            # TODO package must be changed per-api endpoint - will need nested loop to run <Section> per <URI>
+            # TODO also update format_package to support multiple API endpoints (via backend class)
+            #  for best result, will likely need to refactor this into backend OR update get_posts to run format_package
             if len(section.rating) > 1:
                 self.format_package(section.tags[:3] + [f"score:>={section.min_score}"])
             else:
@@ -86,6 +92,10 @@ class Downloader:
             f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
         )
 
+    # TODO format_package will need to take booru_api and either: if not defined ('default') run backend code to
+    #  determine api endpoints
+    # TODO remove 'limit' flag for format_package as each booru is different and leaving blank should provide max
+    #  available for a given booru
     def format_package(
         self, tags: typing.List[str], limit: int = 320, before_id: int = 100000000
     ):
@@ -114,6 +124,8 @@ class Downloader:
 
         self.package = package
 
+    # TODO: refactor this into backend and/or combine with already available backend.request_uri()
+    # TODO: remove session from required variables as it is a global class variable
     def download_file(
         self, session: requests.Session, url: str, section: str, file_name: str
     ):
@@ -158,6 +170,9 @@ class Downloader:
             )
             # DEBUG to file
             return -1
+
+    # TODO: tags are not yet checked for boorus - eventually add support once api support is done
+    # TODO: update variables used in the function to take global class variables where available
 
     def get_posts(self, section: cfg.Section):
         """Collects all posts given a certain config section and its respective metadata
@@ -206,6 +221,8 @@ class Downloader:
                 searched_posts += 1
                 # Simple profiling setup
                 post_start = time.time()
+
+                # TODO: update key collection to use multiple api endpoints - recommend refactor to separate function
                 last_id = int(
                     (post_id := post["id"])
                 )  # Set the new last_id to the last available post ran
@@ -224,6 +241,7 @@ class Downloader:
                     )
                     continue
 
+                # TODO: update tags section to be modular - recommend refactor this into backend or separate function
                 # Metadata - TODO re-enable typed tags
                 tags = (
                     (category := post["tags"])["general"]
@@ -238,8 +256,11 @@ class Downloader:
                 # score = post["score"]["total"] #TODO unused but could be useful
                 faves = post["fav_count"]
                 rating = post["rating"]
+
+                # TODO refactor time to separate function to support multiple APIs
                 post_time = datetime.fromisoformat(post["created_at"]).timestamp()
 
+                # TODO refactor all checks to separate function - also re-add min_score test
                 # Check for invalid files
                 if rating not in section.rating:
                     # print(f'Debug: Rating wrong {post_id}')
@@ -275,6 +296,7 @@ class Downloader:
                 if blacklisted:
                     continue
 
+                # TODO refactor this to use the function to obtain file url for multi endpoints
                 # Download the file if not blacklisted and stuff
                 file_name = self.download_file(
                     self.session, post["file"]["url"], section.name, str(post_id)
@@ -283,6 +305,8 @@ class Downloader:
                     skipped_files += 1
                     continue
 
+                # TODO add support for determination of status code errors related to
+                #  too many requests and update timing based on error
                 # Check timing and ensure 2 requests a second compliance
                 post_finish = time.time()
                 post_timing = post_finish - post_start
@@ -292,6 +316,8 @@ class Downloader:
 
                 total_posts += 1  # If reach here post was acquired
 
+            # TODO Add info on which URI is being searched - add support for multiple api searches simultaneously
+            #  this will require multiprocessing and refactor of code body of function to a parameterized function
             logging.info(
                 f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
                 f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"

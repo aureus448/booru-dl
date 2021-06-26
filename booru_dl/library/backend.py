@@ -7,6 +7,16 @@ import typing
 
 import requests
 
+# TODO refactor backend into its own class
+#  Allows for multiple backend sessions to be used in main file
+#    this change is necessary to support multiple uris
+
+# TODO add backend support for API endpoint determination per URI
+#   some boorus are different, would be nice to create modularized code
+#   to work with the majority of available boorus - TBD
+
+# TODO fix Downloader() class in main having its own version of request_uri for download_file()
+
 
 def get_session(useragent: str) -> requests.Session:
     """Offers a Session for requests

@@ -63,6 +63,20 @@ import os
 import pathlib
 from typing import Dict, List, Tuple
 
+# TODO modify URI grabbing to support following structure:
+#  [URI]
+#  uri = uri_1, uri_2
+#  uri_1 = api_key, user_name, booru_type
+#  allows for modular amount of URIs to search
+#  booru_type is especially important for determining codepaths - allow for auto-determination,
+#    but ADD DIRECTLY TO file once type is known [Requires rewrite to disk of config - potentially dangerous]
+#  Or: in [URI] each field is <uri_nickname> with data being <uri_url>, <api_key>, <user_name>
+
+# TODO modify Section to determine which API endpoints are allowed to be searched
+#  [Section_foo]
+#  <data>
+#  api = uri_1, uri_2 (defined exactly like in URI [allow nickname? how to support])
+
 
 class Section:
     """Class containing filtering data for use in search and collection"""

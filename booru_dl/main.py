@@ -40,9 +40,6 @@ class Downloader:
         self,
         config_loc: str = "config.ini",
     ):  # Self-starting function
-        self.blacklist: typing.List[str] = []
-        self.package: typing.Dict[str, object] = {}
-
         logging.info("Starting Booru downloader [v1.0.0]")
 
         self.path = pathlib.PurePath(".")
@@ -55,16 +52,14 @@ class Downloader:
 
         # Collects config and Session
         self.config = cfg.Config(config_loc)
+        # TODO extract session to run on post basis (likely)
         self.session = backend.get_session(self.config.useragent)  # Get useragent
 
         # Collects metadata
         self.URI = self.config.uri
         self.API = self.config.api
         self.USER = self.config.user
-
         self.blacklist = self.config.blacklist
-
-        self.get_data()
 
     def get_data(self):
         """Collects all data from the sections determined on class instantiation
@@ -74,19 +69,19 @@ class Downloader:
         provided input from booru site)
         """
         start = time.time()
-        for section in self.config.posts:
-            logging.info(f'Beginning Download of section "{section}"')
-            sct: cfg.Section = self.config.posts[section]
+        for section_name in self.config.posts:
+            logging.info(f'Beginning Download of section "{section_name}"')
+            section: cfg.Section = self.config.posts[section_name]
             # 3 tags + score + rating for filtering
-            if len(sct.rating) > 1:
-                self.format_package(sct.tags[:3] + [f"score:>={sct.min_score}"])
+            if len(section.rating) > 1:
+                self.format_package(section.tags[:3] + [f"score:>={section.min_score}"])
             else:
                 self.format_package(
-                    sct.tags[:4]
-                    + [f"score:>={sct.min_score}", f"rating:{sct.rating[0]}"]
+                    section.tags[:4]
+                    + [f"score:>={section.min_score}", f"rating:{section.rating[0]}"]
                 )
             # DEBUG print(self.package)
-            self.get_posts(sct)
+            self.get_posts(section)
         logging.info(
             f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
         )
@@ -324,5 +319,6 @@ class Downloader:
 if __name__ == "__main__":
     logger = backend.set_logger(logging.getLogger(), "booru-dl.log")
     # Main entrypoint
-    Downloader()
+    downloader = Downloader()
+    downloader.get_data()
     os.system("pause")  # Warn: Windows only

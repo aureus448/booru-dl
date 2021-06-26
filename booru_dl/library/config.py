@@ -93,6 +93,7 @@ class Section:
     allowed_types: List[
         str
     ]  #: List of file types allowed per section (Allows changing file-types per section)
+    api_endpoint: List[str]  #: Allowed APIs to use based on [URI] key
 
 
 class Config:
@@ -178,7 +179,7 @@ class Config:
         else:
             return "Booru DL (user unknown)"
 
-    def _get_uri(self) -> str:
+    def _get_uri(self) -> Dict[str, list]:
         """Given uri.ini collects the expected URI to use
 
         Expects a uri such as https://google.com (but a valid booru one)
@@ -191,15 +192,60 @@ class Config:
             ini (str): Defaults to uri.ini, file name to use for configuration
 
         Returns:
-            str: The URI of the booru site
+            list: List of URI Nicknames, URIs, User Names, and API keys if data exists
         """
-        if "URI" in self.parser and "uri" in self.parser["URI"]:
-            uri = self.parser["URI"]["uri"]
-            logging.debug(f"URI Found: {uri}")
+        if "URI" in self.parser:
+            """
+            Warning: This whole section uses list comprehension and may be confusing
+
+            The basics of what this does: if data exists, add it to a list
+
+            For uris, user_name, and api_keys, it checks data exists and then adds it to the list
+            otherwise it will insert '' to indicate the data doesn't exist for that specific uri
+            """
+            uri_section = self.parser["URI"]
+            available_uri = [key for key in uri_section.keys()]
+            uri_data = [[uri, uri_section[uri]] for uri in available_uri]
+
+            # Setup list
+            result_list: Dict[str, list] = {}
+
+            # Collect URI data
+            for data in uri_data:
+                if data[1] is None:  # NoneType
+                    continue
+                if (
+                    len((result := list(map(str.strip, data[1].split(","))))) > 2
+                ):  # URI, username and api_key exists
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME Found for {result[0]}")
+                    logging.debug(f"API KEY Found for {result[0]}")
+                    result_list[data[0]] = [data[0], result[0], result[1], result[2]]
+                elif len(result) > 1:  # URI and username exists
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME Found for {result[0]}")
+                    logging.debug(f"API KEY N/A for {result[0]}")
+                    result_list[data[0]] = [data[0], result[0], result[1], ""]
+                elif (
+                    len(result) > 0 and result[0] != ""
+                ):  # URI exist, all other data missing
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME N/A for {result[0]}")
+                    logging.debug(f"API KEY N/A for {result[0]}")
+                    result_list[data[0]] = [data[0], result[0], "", ""]
+                else:
+                    logging.warning(
+                        f"Found broken key {data[0]} in [URI] - Please fix or remove."
+                    )
         else:
-            logging.error("No URI Found - Please ensure config is set up correctly")
+            logging.error(
+                "No URI Section Found - Please ensure config is set up correctly"
+            )
+            logging.error(
+                "Possible Solution: Delete config and allow program to create new one"
+            )
             raise ValueError
-        return uri
+        return result_list
 
     def _get_api_key(self) -> Tuple[str, str]:
         """Collects the api and username for use in POST requests if provided
@@ -218,7 +264,7 @@ class Config:
             logging.debug("No API/Username found - Accepted behavior")
             return "", ""
 
-    def _get_booru_data(self) -> Dict[str, str]:
+    def _get_booru_data(self) -> Dict[str, dict]:
         """Given a URI provides a dictionary of expected booru website APIs
 
         Warnings:
@@ -231,12 +277,15 @@ class Config:
             URIs available per booru is different, this contains a basic setup based on guesses.
             Failure to collect URIs properly should be submitted to the dev for future improvement.
         """
-
-        return dict(
-            POST_URI=f"{(main_uri := self.uri)}/posts.json",
-            TAG_URI=f"{main_uri}/tags.json",
-            ALIAS_URI=f"{main_uri}/tag_aliases.json",
-        )
+        booru_endpoints: Dict[str, dict] = {}
+        for uri in self.uri:
+            # uri is a list containing: [nickname, url, username, api]
+            booru_endpoints[uri] = dict(
+                POST_URI=f"{(main_uri := self.uri[uri][1])}/posts.json",
+                TAG_URI=f"{main_uri}/tags.json",
+                ALIAS_URI=f"{main_uri}/tag_aliases.json",
+            )
+        return booru_endpoints
 
     def _parse_config(self) -> None:
         """Parses the config provided by ``__init__()`` for sections to search
@@ -361,12 +410,8 @@ class Config:
             "???": "false",
         }
         config["URI"] = {
-            "; Place the Booru URI here (a URI is like https://google.com)": None,
-            "uri": "",
-            "; [Optional] Support for a booru API key here": None,
-            "api": "",
-            "; [Optional] Support for a booru username here": None,
-            "user": "",
+            "; Place the Booru data here in this order: url, username [Optional], api_key [Optional]": None,
+            "insert_nickname_for_uri": "",
         }
         config["Default"] = {
             "notes": "Default values used if missing for other sections. Set them to reasonable levels or your "
@@ -412,6 +457,6 @@ class Config:
 
 if __name__ == "__main__":
     # Intended to be used with debug breakpoints - otherwise do not use
-    config = Config("test.ini")
+    config = Config("../config.ini")
     # Warning: Make sure config is passed a test value or you could accidentally delete your config
     os.remove(config.filepath)

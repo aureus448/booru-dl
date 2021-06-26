@@ -33,17 +33,25 @@ def test__get_useragent_provided_username(collect_config):
 
 
 def test__get_uri(collect_config):
-    """Force set URI to something to see if URI collection is correct"""
-    collect_config.parser["URI"]["uri"] = "https://test_uri.com"
+    """Tests the config ability to collect available uris"""
+    collect_config.parser["URI"]["test_0"] = "https://test_uri_0.com"
+    collect_config.parser["URI"]["test_1"] = "https://test_uri_1.com, test_user"
+    collect_config.parser["URI"][
+        "test_2"
+    ] = "https://test_uri_2.com, test_user, test_api"
+    collect_config.parser["URI"][
+        "test_3"
+    ] = ""  # Should produce warning of missing data
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
-    assert collect_config.uri == "https://test_uri.com"
+    assert type(collect_config.uri) == dict
+    assert type(collect_config.uri["test_0"]) == list
 
 
 def test__get_uri_fail_on_missing(collect_config):
     """Force set URI to fail"""
     with pytest.raises(ValueError):
         # replace dict with one that doesn't include uri
-        collect_config.parser["URI"] = {"api": "code_crasher"}
+        del collect_config.parser["URI"]
         collect_config.uri = collect_config._get_uri()  # re-run uri collection
 
 
@@ -70,7 +78,7 @@ def test__get_api_key_missing_config(collect_config):
 
 def test__get_booru_data(collect_config):
     """Changes the uri and sees if it propagates properly to booru data"""
-    collect_config.parser["URI"]["uri"] = (main_uri := "https://test_uri.com")
+    collect_config.parser["URI"]["test_uri"] = (main_uri := "https://test_uri.com")
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
     collect_config.paths = collect_config._get_booru_data()  # re-run path collection
     expected = dict(
@@ -78,7 +86,7 @@ def test__get_booru_data(collect_config):
         TAG_URI=f"{main_uri}/tags.json",
         ALIAS_URI=f"{main_uri}/tag_aliases.json",
     )
-    assert str(expected.values()) == str(collect_config.paths.values())
+    assert str(expected.values()) == str(collect_config.paths["test_uri"].values())
 
 
 def test__parse_config(collect_config):

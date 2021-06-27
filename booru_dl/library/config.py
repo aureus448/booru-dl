@@ -312,11 +312,20 @@ class Config:
         booru_endpoints: Dict[str, dict] = {}
         for uri in self.uri:
             # uri is a list containing: [nickname, url, username, api]
-            booru_endpoints[uri] = dict(
-                POST_URI=f"{(main_uri := self.uri[uri][1])}/posts.json",
-                TAG_URI=f"{main_uri}/tags.json",
-                ALIAS_URI=f"{main_uri}/tag_aliases.json",
-            )
+            if (res := self.uri[uri][2]) == "danbooru":
+                booru_endpoints[uri] = dict(
+                    POST_URI=f"{(main_uri := self.uri[uri][1])}/posts.json",
+                    TAG_URI=f"{main_uri}/tags.json",
+                    ALIAS_URI=f"{main_uri}/tag_aliases.json",
+                )
+            elif res == "gelbooru":
+                booru_endpoints[uri] = dict(
+                    POST_URI=f"{(main_uri := self.uri[uri][1])}/index.php",
+                    TAG_URI=f"{main_uri}/index.php",
+                    ALIAS_URI=f"{main_uri}/index.php",
+                )
+            else:
+                booru_endpoints[uri] = {}  # None
         return booru_endpoints
 
     def _parse_config(self) -> None:

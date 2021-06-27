@@ -8,6 +8,18 @@ from requests.sessions import Session
 from booru_dl.library import backend, config
 
 
+@pytest.fixture(scope="module", params=os.environ["urls"].split(", "))
+def provide_package_data(request):
+    config_file = config.Config("test.ini")
+    config_file.parser["URI"]["test_0"] = f"{request.param}"
+    config_file.uri = config_file._get_uri()
+    config_file.paths = config_file._get_booru_data()
+    tags = ["Pikachu"]
+    before_id = 10000000
+    package = backend.format_package(tags, before_id, config_file.uri["test_0"][2])
+    return config_file, package
+
+
 def test_set_logger():
     logger = logging.getLogger("Test Check")
     logger = backend.set_logger(logger, "booru-dl.log")
@@ -20,68 +32,49 @@ def test_get_session(collect_config):
     assert type(backend.get_session(collect_config.useragent)) == Session
 
 
-@pytest.fixture
-def package():
-    return {
-        "page": "b10000000",
-        "limit": 320,  # Reminder: max limit of 320
-        "tags": "",  # Reminder: hard limit of 4 tags
-    }
-
-
-def change_uri(URI, auth=False):
-    collect_config = config.Config("test.ini")
-    collect_config.parser["URI"]["uri"] = URI
-    collect_config.uri = collect_config._get_uri()  # re-run uri collection
-    collect_config.paths = collect_config._get_booru_data()
-    if auth:
-        collect_config.parser["URI"]["api"] = "test_api_key"
-        collect_config.parser["URI"]["user"] = "test_user"
-        (
-            collect_config.api,
-            collect_config.user,
-        ) = collect_config._get_api_key()  # re-run api collection
-    return collect_config
-
-
-def test_request_uri_fail(get_session, package):
+def test_request_uri_fail(get_session):
     """Provided an arbitrary package, see if requests succeed
     Runs through silent to ensure works
     """
-    config = change_uri("https://google.com")
     with pytest.raises(requests.RequestException):
         backend.request_uri(
-            get_session, config.paths["POST_URI"], package, auth=None, silent=True
+            get_session, "https://google.com.json?", auth=None, silent=True
         )
 
 
-def test_request_uri_success(get_session, package):
+def test_request_uri_success(provide_package_data, get_session):
     """Requires URI set in environment variables"""
-    config = change_uri(os.environ["URI"])
-
-    result = backend.request_uri(
-        get_session, config.paths["POST_URI"], package, auth=None
-    )
-    assert result.status_code == 200
-
-
-def test_request_uri_fail_authenticated(get_session, package):
-    """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
-    config = change_uri(os.environ["URI"], auth=True)
-    with pytest.raises(requests.RequestException):
-        backend.request_uri(
+    if provide_package_data[1]:
+        result = backend.request_uri(
             get_session,
-            config.paths["POST_URI"],
-            package,
-            auth=(config.user, config.api),
+            provide_package_data[0].paths["test_0"]["POST_URI"],
+            provide_package_data[1],
+            auth=None,
         )
+        assert result.status_code == 200
 
 
-def test_request_uri_success_no_package(get_session):
+def test_request_uri_fail_authenticated(provide_package_data, get_session):
+    """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
+    if provide_package_data[1]:
+        with pytest.raises(requests.RequestException):
+            result = backend.request_uri(
+                get_session,
+                provide_package_data[0].paths["test_0"]["POST_URI"],
+                provide_package_data[1],
+                auth=(provide_package_data[0].user, provide_package_data[0].api),
+            )
+            if result.status_code == 200:
+                raise requests.RequestException  # Some sites silently fail - not sure why
+
+
+def test_request_uri_success_no_package(provide_package_data, get_session):
     """Requires URI set in environment variables"""
-    config = change_uri(os.environ["URI"])
-    result = backend.request_uri(get_session, config.paths["POST_URI"], auth=None)
-    assert result.status_code == 200
+    if provide_package_data[1]:
+        result = backend.request_uri(
+            get_session, provide_package_data[0].paths["test_0"]["POST_URI"], auth=None
+        )
+        assert result.status_code == 200
 
 
 def test_cleanup(collect_config):

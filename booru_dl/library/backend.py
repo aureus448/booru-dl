@@ -145,6 +145,14 @@ def request_uri(
 
     if result.status_code == 200:
         return result
+    elif result.status_code == 403:
+        scraper = cloudscraper.create_scraper()
+        result = scraper.get(url, params=package)
+        if result.status_code == 403:
+            print("No Dice")
+            raise requests.RequestException(result.status_code)
+        else:
+            return result
     else:
         if not silent:
             logging.error(
@@ -262,7 +270,9 @@ def determine_api(api: str) -> str:
                 # result = scraper.get(api+'/index.php', params=package).text
                 result = scraper.get(api + "/index.php", params=package)
                 if result.status_code == 403:
-                    print(f"No Dice. API endpoint for {api} is broken by cloudflare")
+                    logging.error(
+                        f"No Dice. API endpoint for {api} is broken by cloudflare"
+                    )
                 elif result.status_code == 200:
                     data = result.json()
                     if type(data) == list and type(data[0]) == dict:
@@ -275,7 +285,7 @@ def determine_api(api: str) -> str:
             if type(e) != requests.RequestException:
                 print(f"Encountered exception {e}")
 
-    print(f"Website {api} is of type {api_type}")
+    logging.debug(f"Website {api} is of type {api_type}")
     return api_type
 
 

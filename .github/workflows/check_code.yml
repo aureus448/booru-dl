@@ -13,7 +13,7 @@ jobs:
       URI: ${{ secrets.URI }}
       API: ${{ secrets.API }}
       USER: ${{ secrets.USER }}
-      URL: ${{ secrets.URL }}
+      urls: ${{ secrets.URLS }}
     steps:
       - uses: actions/checkout@master
       - name: Setup Python

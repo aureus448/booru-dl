@@ -61,7 +61,7 @@ import configparser
 import logging
 import os
 import pathlib
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from booru_dl.library import backend
 
@@ -143,7 +143,7 @@ class Config:
         self.parser = self._get_config()
         self.useragent = self._get_useragent()
         self.uri = self._get_uri()
-        self.api, self.user = self._get_api_key()
+        # self.api, self.user = self._get_api_key()
         self.paths = self._get_booru_data()
 
         # Create lists of data to collect
@@ -279,22 +279,23 @@ class Config:
             raise ValueError
         return result_list
 
-    def _get_api_key(self) -> Tuple[str, str]:
-        """Collects the api and username for use in POST requests if provided
-
-
-        Returns:
-            Tuple[str, str]: A tuple containing ``(api_key, user_name)`` or ``('','')`` if undefined
-        """
-        # If provided api key for booru - some require this
-        if "api" in (parse := self.parser["URI"]) and "user" in parse:
-            logging.debug(
-                "Collected API and Username from URI config - Will use for Authentication"
-            )
-            return parse["api"], parse["user"]
-        else:
-            logging.debug("No API/Username found - Accepted behavior")
-            return "", ""
+    # TODO fix this to work with multiple URI
+    # def _get_api_key(self) -> Tuple[str, str]:
+    #     """Collects the api and username for use in POST requests if provided
+    #
+    #
+    #     Returns:
+    #         Tuple[str, str]: A tuple containing ``(api_key, user_name)`` or ``('','')`` if undefined
+    #     """
+    #     # If provided api key for booru - some require this
+    #     if "api" in (parse := self.parser["URI"]) and "user" in parse:
+    #         logging.debug(
+    #             "Collected API and Username from URI config - Will use for Authentication"
+    #         )
+    #         return parse["api"], parse["user"]
+    #     else:
+    #         logging.debug("No API/Username found - Accepted behavior")
+    #         return "", ""
 
     def _get_booru_data(self) -> Dict[str, dict]:
         """Given a URI provides a dictionary of expected booru website APIs
@@ -365,6 +366,11 @@ class Config:
                     if "allowed_types" in data
                     else "jpg, gif, png"
                 )
+                self.default_endpoints = (
+                    data["api_endpoints"]
+                    if "api_endpoints" in data
+                    else ", ".join(list(self.uri.keys()))  # Default to all available
+                )
 
             elif section_check == "blacklist":
                 # Defaults to nothing blocked if doesn't exist
@@ -413,6 +419,16 @@ class Config:
                         (
                             self.__get_key(
                                 "allowed_types", section, self.default_allowed
+                            )
+                        ).split(","),
+                    )
+                )
+                self.posts[f"{section}"].api_endpoint = list(
+                    map(
+                        str.strip,
+                        (
+                            self.__get_key(
+                                "api_endpoints", section, self.default_endpoints
                             )
                         ).split(","),
                     )

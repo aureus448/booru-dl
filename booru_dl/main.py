@@ -58,8 +58,8 @@ class Downloader:
         # Collects metadata
         # TODO add support for multiple uri, api_keys, and usernames - will be implemented in config
         self.URI = self.config.uri
-        self.API = self.config.api
-        self.USER = self.config.user
+        # self.API = self.config.api
+        # self.USER = self.config.user
         # TODO add support for multiple blacklists PER URI (possible but is it needed?)
         self.blacklist = self.config.blacklist
 
@@ -79,22 +79,29 @@ class Downloader:
             # TODO package must be changed per-api endpoint - will need nested loop to run <Section> per <URI>
             # TODO also update format_package to support multiple API endpoints (via backend class)
             #  for best result, will likely need to refactor this into backend OR update get_posts to run format_package
-            before_id = 10000000
-            if len(section.rating) > 1:
-                self.package = format_package(
-                    section.tags[:3] + [f"score:>={section.min_score}"],
-                    before_id,
-                    booru_api="danbooru",
-                )
-            else:
-                self.package = format_package(
-                    section.tags[:4]
-                    + [f"score:>={section.min_score}", f"rating:{section.rating[0]}"],
-                    before_id,
-                    booru_api="danbooru",
-                )
-            # DEBUG print(self.package)
-            self.get_posts(section)
+            for api in section.api_endpoint:
+                booru_type = self.config.uri[api][2]
+                if booru_type != "None":
+                    logging.info(f"Beginning collection from {api} [{section_name}")
+                    before_id = 10000000
+                    if len(section.rating) > 1:
+                        self.package = format_package(
+                            section.tags[:3] + [f"score:>={section.min_score}"],
+                            before_id,
+                            booru_api=booru_type,  # List contains booru type at index 2
+                        )
+                    else:
+                        self.package = format_package(
+                            section.tags[:4]
+                            + [
+                                f"score:>={section.min_score}",
+                                f"rating:{section.rating[0]}",
+                            ],
+                            before_id,
+                            booru_api=booru_type,
+                        )
+                    # DEBUG print(self.package)
+                    self.get_posts(section, api, booru_type)
         logging.info(
             f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
         )
@@ -128,10 +135,11 @@ class Downloader:
             return 1
         else:
             os.makedirs(filepath, exist_ok=True)
-        if self.USER and self.API:
-            result = session.get(url, stream=True, auth=(self.USER, self.API))
-        else:
-            result = session.get(url, stream=True)
+        # TODO api broken atm
+        # if self.USER and self.API:
+        #     result = session.get(url, stream=True, auth=(self.USER, self.API))
+        # else:
+        result = session.get(url, stream=True)
         if result.status_code == 200:
             with open(filepath.joinpath(file_name), "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
@@ -149,7 +157,7 @@ class Downloader:
     # TODO: tags are not yet checked for boorus - eventually add support once api support is done
     # TODO: update variables used in the function to take global class variables where available
 
-    def get_posts(self, section: cfg.Section):
+    def get_posts(self, section: cfg.Section, url: str, endpoint: str):
         """Collects all posts given a certain config section and its respective metadata
 
         Note:
@@ -177,20 +185,27 @@ class Downloader:
 
         # Main function loop
         while last_id > 1:
-
-            if self.USER and self.API:
-                current_batch = backend.request_uri(
-                    self.session,
-                    self.config.paths["POST_URI"],
-                    package,
-                    (self.USER, self.API),
-                )
-                current_batch = current_batch.json()["posts"]
-
+            # TODO api needs to be fixed
+            # if self.USER and self.API:
+            #     current_batch = backend.request_uri(
+            #         self.session,
+            #         self.config.paths[url]["POST_URI"],
+            #         package,
+            #         (self.USER, self.API),
+            #     )
+            #     current_batch = current_batch.json()["posts"]
+            #
+            # else:
+            current_batch = backend.request_uri(
+                self.session, self.config.paths[url]["POST_URI"], package
+            ).json()
+            if len(current_batch) > 0:
+                if type(current_batch) == dict:
+                    current_batch = current_batch["posts"]
             else:
-                current_batch = backend.request_uri(
-                    self.session, self.config.paths["POST_URI"], package
-                ).json()["posts"]
+                logging.warning(
+                    f"No Data for API {url} - Perhaps the requirements are too high"
+                )
 
             for post in current_batch:
                 searched_posts += 1
@@ -202,13 +217,21 @@ class Downloader:
                     (post_id := post["id"])
                 )  # Set the new last_id to the last available post ran
                 # Check for bad extensions
-                if post["file"]["url"]:
-                    file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
+                if "file_url" in post:
+                    file_ext = post["file_url"].split("/")[-1].split(".")[-1]
+                    file = post["file_url"]
+                elif "file" in post and "url" in post["file"]:
+                    if post["file"]["url"]:
+                        file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
+                        file = post["file"]["url"]
+                    else:
+                        logging.warning(
+                            f"File access for Post {post_id} blocked by site - possibly requires API access"
+                        )
+                        continue
                 else:
-                    logging.warning(
-                        f"File access for Post {post_id} blocked by site - possibly requires API access"
-                    )
-                    continue
+                    continue  # unknown post type
+
                 if file_ext not in section.allowed_types:
                     logging.debug(
                         f"Post {post_id} was skipped due to being extension "
@@ -218,24 +241,39 @@ class Downloader:
 
                 # TODO: update tags section to be modular - recommend refactor this into backend or separate function
                 # Metadata - TODO re-enable typed tags
-                tags = (
-                    (category := post["tags"])["general"]
-                    + category["species"]
-                    + category["character"]
-                    + category["copyright"]
-                    + category["artist"]
-                    + category["invalid"]
-                    + category["lore"]
-                    + category["meta"]
-                )
+                if "tags" in post:
+                    if type(post["tags"]) == str:
+                        tags = post["tags"]
+                    elif type(post["tags"]) == dict:
+                        tags = (
+                            (category := post["tags"])["general"]
+                            + category["species"]
+                            + category["character"]
+                            + category["copyright"]
+                            + category["artist"]
+                            + category["invalid"]
+                            + category["lore"]
+                            + category["meta"]
+                        )
+                    else:
+                        continue  # unknown post type
+                elif "tag_string" in post:
+                    tags = post["tag_string"]
+                else:
+                    continue  # unknown post type
                 # score = post["score"]["total"] #TODO unused but could be useful
-                faves = post["fav_count"]
+                faves = post["fav_count"] if "fav_count" in post else 0
                 rating = post["rating"]
 
                 # TODO refactor time to separate function to support multiple APIs
-                post_time = datetime.fromisoformat(post["created_at"]).timestamp()
+                try:
+                    post_time = datetime.fromisoformat(post["created_at"]).timestamp()
+                except ValueError:
+                    post_time = time.mktime(
+                        time.strptime(post["created_at"], "%a %b %d %H:%M:%S %z %Y")
+                    )
 
-                # TODO refactor all checks to separate function - also re-add min_score test
+                    # TODO refactor all checks to separate function - also re-add min_score test
                 # Check for invalid files
                 if rating not in section.rating:
                     # print(f'Debug: Rating wrong {post_id}')
@@ -274,7 +312,7 @@ class Downloader:
                 # TODO refactor this to use the function to obtain file url for multi endpoints
                 # Download the file if not blacklisted and stuff
                 file_name = self.download_file(
-                    self.session, post["file"]["url"], section.name, str(post_id)
+                    self.session, file, section.name, str(post_id)
                 )  # 3rd argument is file name (optional)
                 if file_name == 1:
                     skipped_files += 1
@@ -293,10 +331,11 @@ class Downloader:
 
             # TODO Add info on which URI is being searched - add support for multiple api searches simultaneously
             #  this will require multiprocessing and refactor of code body of function to a parameterized function
-            logging.info(
-                f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
-                f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
-            )
+            if searched_posts > 0:
+                logging.info(
+                    f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
+                    f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
+                )
             logging.debug(
                 f"{total_posts + skipped_files} Files collected (or cached); {searched_posts} Searched"
             )

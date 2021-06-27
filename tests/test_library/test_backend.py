@@ -54,18 +54,18 @@ def test_request_uri_success(provide_package_data, get_session):
         assert result.status_code == 200
 
 
-def test_request_uri_fail_authenticated(provide_package_data, get_session):
-    """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
-    if provide_package_data[1]:
-        with pytest.raises(requests.RequestException):
-            result = backend.request_uri(
-                get_session,
-                provide_package_data[0].paths["test_0"]["POST_URI"],
-                provide_package_data[1],
-                auth=(provide_package_data[0].user, provide_package_data[0].api),
-            )
-            if result.status_code == 200:
-                raise requests.RequestException  # Some sites silently fail - not sure why
+# def test_request_uri_fail_authenticated(provide_package_data, get_session):
+#     """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
+#     if provide_package_data[1]:
+#         with pytest.raises(requests.RequestException):
+#             result = backend.request_uri(
+#                 get_session,
+#                 provide_package_data[0].paths["test_0"]["POST_URI"],
+#                 provide_package_data[1],
+#                 auth=(provide_package_data[0].user, provide_package_data[0].api),
+#             )
+#             if result.status_code == 200:
+#                 raise requests.RequestException  # Some sites silently fail - not sure why
 
 
 def test_request_uri_success_no_package(provide_package_data, get_session):

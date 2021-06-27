@@ -25,16 +25,16 @@ def test__get_useragent_unknown(collect_config):
     assert "unknown" in collect_config.useragent
 
 
-def test__get_useragent_provided_username(collect_config):
-    """Check Useragent was collected properly"""
-    collect_config.parser["URI"]["api"] = "test_api_key"
-    collect_config.parser["URI"]["user"] = "test_user"
-    (
-        collect_config.api,
-        collect_config.user,
-    ) = collect_config._get_api_key()  # re-run api collection
-    collect_config.useragent = collect_config._get_useragent()
-    assert "test_user" in collect_config.useragent
+# def test__get_useragent_provided_username(collect_config):
+#     """Check Useragent was collected properly"""
+#     collect_config.parser["URI"]["api"] = "test_api_key"
+#     collect_config.parser["URI"]["user"] = "test_user"
+#     (
+#         collect_config.api,
+#         collect_config.user,
+#     ) = collect_config._get_api_key()  # re-run api collection
+#     collect_config.useragent = collect_config._get_useragent()
+#     assert "test_user" in collect_config.useragent
 
 
 @pytest.mark.parametrize(
@@ -66,25 +66,25 @@ def test__get_uri_fail_on_missing(collect_config):
         collect_config.uri = collect_config._get_uri()  # re-run uri collection
 
 
-def test__get_api_key(collect_config):
-    """Force set API key and user to something to see if collection is correct"""
-    collect_config.parser["URI"]["api"] = "test_api_key"
-    collect_config.parser["URI"]["user"] = "test_user"
-    (
-        collect_config.api,
-        collect_config.user,
-    ) = collect_config._get_api_key()  # re-run api collection
-    assert collect_config.api == "test_api_key" and collect_config.user == "test_user"
+# def test__get_api_key(collect_config):
+#     """Force set API key and user to something to see if collection is correct"""
+#     collect_config.parser["URI"]["api"] = "test_api_key"
+#     collect_config.parser["URI"]["user"] = "test_user"
+#     (
+#         collect_config.api,
+#         collect_config.user,
+#     ) = collect_config._get_api_key()  # re-run api collection
+#     assert collect_config.api == "test_api_key" and collect_config.user == "test_user"
 
 
-def test__get_api_key_missing_config(collect_config):
-    """API key and User key missing (Either or, both are needed or code path skips)"""
-    collect_config.parser["URI"] = {"uri": "code_crasher"}
-    (
-        collect_config.api,
-        collect_config.user,
-    ) = collect_config._get_api_key()  # re-run api collection
-    assert not collect_config.api and not collect_config.user
+# def test__get_api_key_missing_config(collect_config):
+#     """API key and User key missing (Either or, both are needed or code path skips)"""
+#     collect_config.parser["URI"] = {"uri": "code_crasher"}
+#     (
+#         collect_config.api,
+#         collect_config.user,
+#     ) = collect_config._get_api_key()  # re-run api collection
+#     assert not collect_config.api and not collect_config.user
 
 
 def test__get_booru_data(collect_config):

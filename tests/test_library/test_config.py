@@ -5,6 +5,11 @@ import pytest
 
 from booru_dl.library import config
 
+# Example
+# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
+# def test_eval(test_input, expected):
+#     assert eval(test_input) == expected
+
 
 def test__get_config(collect_config):
     """Ensure config was produced correctly"""
@@ -32,19 +37,25 @@ def test__get_useragent_provided_username(collect_config):
     assert "test_user" in collect_config.useragent
 
 
-def test__get_uri(collect_config):
+@pytest.mark.parametrize(
+    "test_urls, run_all",
+    zip(os.environ["urls"].split(", "), [True, False, False, False, False]),
+)
+def test__get_uri(test_urls, run_all, collect_config):
     """Tests the config ability to collect available uris"""
-    collect_config.parser["URI"]["test_0"] = "https://test_uri_0.com"
-    collect_config.parser["URI"]["test_1"] = "https://test_uri_1.com, test_user"
-    collect_config.parser["URI"][
-        "test_2"
-    ] = "https://test_uri_2.com, test_user, test_api"
-    collect_config.parser["URI"][
-        "test_3"
-    ] = ""  # Should produce warning of missing data
+    collect_config.parser["URI"]["test_0"] = f"{test_urls}"
+    if run_all:
+        collect_config.parser["URI"]["test_1"] = f"{test_urls}, ,test_user"
+        collect_config.parser["URI"]["test_2"] = f"{test_urls},, test_user, test_api"
+        collect_config.parser["URI"][
+            "test_3"
+        ] = ""  # Should produce warning of missing data
+        collect_config.parser["URI"]["test_4"] = f"{test_urls}"
+        collect_config.parser["URI"]["test_5"] = f"{test_urls}"
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
     assert type(collect_config.uri) == dict
     assert type(collect_config.uri["test_0"]) == list
+    assert collect_config.uri["test_0"][2] in ["danbooru", "gelbooru", "None"]
 
 
 def test__get_uri_fail_on_missing(collect_config):
@@ -78,7 +89,8 @@ def test__get_api_key_missing_config(collect_config):
 
 def test__get_booru_data(collect_config):
     """Changes the uri and sees if it propagates properly to booru data"""
-    collect_config.parser["URI"]["test_uri"] = (main_uri := "https://test_uri.com")
+    test_urls = os.environ["urls"].split(", ")
+    collect_config.parser["URI"]["test_uri"] = (main_uri := f"{test_urls[0]}")
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
     collect_config.paths = collect_config._get_booru_data()  # re-run path collection
     expected = dict(

@@ -5,6 +5,7 @@ Primarily used to POST request the booru website, collect a Requests session, an
 import logging
 import typing
 
+import cloudscraper
 import requests
 
 # TODO refactor backend into its own class
@@ -211,3 +212,130 @@ def set_logger(log: logging.Logger, name: str) -> logging.Logger:
     log.addHandler(fh)
     log.addHandler(sh)
     return log
+
+
+def determine_api(api: str) -> str:
+    """Function that attempts to determine the API for a given site.
+
+    Args:
+        api (str): URL of the site (Such as https://google.com)
+
+    Returns:
+        str: Determined API endpoint type for the given site, or 'None' if couldn't determine
+    """
+    api_type = "None"  # Default value if all try-except fail
+
+    tags = ["Pikachu"]  # attempts to get a pikachu picture from each website
+    before_id = 1000000  # attempts to collect latest with arbitrarily high value
+    session = get_session("Test_API_ENDPOINT")
+
+    # Attempt 'danbooru' booru api setup
+    try:
+        package = format_package(tags, before_id, "danbooru")
+        result = session.get(api + "/posts.json", params=package)
+        if result.status_code == 200:
+            data = result.json()
+            if len(data) == 1:
+                try:
+                    data = data["posts"]
+                except ValueError:
+                    pass
+            if type(data) == list and type(data[0]) == dict:
+                api_type = "danbooru"
+        else:
+            raise requests.RequestException(f"Error Status Code: {result.status_code}")
+    except Exception as e:
+        if type(e) != requests.RequestException:
+            print(f"Encountered exception {e}")
+
+    if api_type != "danbooru":
+        # Attempt 'gelbooru' booru api setup [With support for JSON]
+        try:
+            package = format_package(tags, before_id, "gelbooru")
+            result = session.get(api + "/index.php", params=package)
+            if result.status_code == 200:
+                data = result.json()
+                if type(data) == list and type(data[0]) == dict:
+                    api_type = "gelbooru"
+            elif result.status_code == 403:
+                scraper = cloudscraper.create_scraper()
+                # result = scraper.get(api+'/index.php', params=package).text
+                result = scraper.get(api + "/index.php", params=package)
+                if result.status_code == 403:
+                    print(f"No Dice. API endpoint for {api} is broken by cloudflare")
+                elif result.status_code == 200:
+                    data = result.json()
+                    if type(data) == list and type(data[0]) == dict:
+                        api_type = "gelbooru"
+            else:
+                raise requests.RequestException(
+                    f"Error Status Code: {result.status_code}"
+                )
+        except Exception as e:
+            if type(e) != requests.RequestException:
+                print(f"Encountered exception {e}")
+
+    print(f"Website {api} is of type {api_type}")
+    return api_type
+
+
+# TODO format_package will need to take booru_api and either: if not defined ('default') run backend code to
+#  determine api endpoints
+# TODO remove 'limit' flag for format_package as each booru is different and leaving blank should provide max
+#  available for a given booru
+def format_package(
+    tags: typing.List[str],
+    before_id: int,
+    booru_api: str,
+) -> typing.Dict[str, str]:
+    """Formats package for session handler
+
+    Package is a attribute used across the class to POST request data from
+    the booru site, and this function provides the proper format for all
+    other functions in the class that use ``self.package``.
+
+    Args:
+        tags (list): List of tags to search for.
+        limit (int): Amount of posts to collect from the booru (Max of 320 for most websites)
+        before_id (int): Last post ID to ignore (used to filter search to a certain page
+            on the booru website)
+
+    Warnings:
+        ``tags`` attribute must be limited to 4 tags or less to properly be
+        used in most booru websites
+    """
+    # Session package
+    if booru_api == "danbooru":
+        """Danbooru style sites have support for:
+
+        ~ 4 tags with special tag formatting
+        rating
+        score
+
+        special formatting for:
+        page (b<post_id>)
+        """
+        package = {
+            "page": f"b{before_id}",
+            "tags": " ".join(tags),  # Reminder: hard limit of 4 tags
+        }
+    elif booru_api == "gelbooru":
+        """
+        Default requires the following:
+
+        page is dapi (default booru api endpoint)
+        s is post (search posts)
+        q is index (show index of all posts)
+        only one/two tags allowed - TODO determine if works
+        """
+        # Typical format for *most booru sites
+        package = {
+            "page": "dapi",
+            "s": "post",
+            "q": "index",
+            "json": "1",
+            "tags": " ".join(tags[:2]),  # 2 tags only for safety - truncates rating
+        }
+    else:
+        package = {}
+    return package

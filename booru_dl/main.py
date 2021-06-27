@@ -15,7 +15,6 @@ import logging
 import os
 import pathlib
 import time
-import typing
 from datetime import datetime
 from time import sleep
 
@@ -23,6 +22,7 @@ import requests
 
 from booru_dl.library import backend
 from booru_dl.library import config as cfg
+from booru_dl.library.backend import format_package
 
 
 class Downloader:
@@ -79,50 +79,25 @@ class Downloader:
             # TODO package must be changed per-api endpoint - will need nested loop to run <Section> per <URI>
             # TODO also update format_package to support multiple API endpoints (via backend class)
             #  for best result, will likely need to refactor this into backend OR update get_posts to run format_package
+            before_id = 10000000
             if len(section.rating) > 1:
-                self.format_package(section.tags[:3] + [f"score:>={section.min_score}"])
+                self.package = format_package(
+                    section.tags[:3] + [f"score:>={section.min_score}"],
+                    before_id,
+                    booru_api="danbooru",
+                )
             else:
-                self.format_package(
+                self.package = format_package(
                     section.tags[:4]
-                    + [f"score:>={section.min_score}", f"rating:{section.rating[0]}"]
+                    + [f"score:>={section.min_score}", f"rating:{section.rating[0]}"],
+                    before_id,
+                    booru_api="danbooru",
                 )
             # DEBUG print(self.package)
             self.get_posts(section)
         logging.info(
             f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
         )
-
-    # TODO format_package will need to take booru_api and either: if not defined ('default') run backend code to
-    #  determine api endpoints
-    # TODO remove 'limit' flag for format_package as each booru is different and leaving blank should provide max
-    #  available for a given booru
-    def format_package(
-        self, tags: typing.List[str], limit: int = 320, before_id: int = 100000000
-    ):
-        """Formats package for session handler
-
-        Package is a attribute used across the class to POST request data from
-        the booru site, and this function provides the proper format for all
-        other functions in the class that use ``self.package``.
-
-        Args:
-            tags (list): List of tags to search for.
-            limit (int): Amount of posts to collect from the booru (Max of 320 for most websites)
-            before_id (int): Last post ID to ignore (used to filter search to a certain page
-                on the booru website)
-
-        Warnings:
-            ``tags`` attribute must be limited to 4 tags or less to properly be
-            used in most booru websites
-        """
-        # Session package
-        package = {
-            "page": f"b{before_id}",
-            "limit": limit,  # Reminder: max limit of 320
-            "tags": " ".join(tags),  # Reminder: hard limit of 4 tags
-        }
-
-        self.package = package
 
     # TODO: refactor this into backend and/or combine with already available backend.request_uri()
     # TODO: remove session from required variables as it is a global class variable

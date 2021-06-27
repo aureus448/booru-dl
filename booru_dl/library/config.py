@@ -63,6 +63,8 @@ import os
 import pathlib
 from typing import Dict, List, Tuple
 
+from booru_dl.library import backend
+
 # TODO modify URI grabbing to support following structure:
 #  [URI]
 #  uri = uri_1, uri_2
@@ -215,28 +217,58 @@ class Config:
                 if data[1] is None:  # NoneType
                     continue
                 if (
-                    len((result := list(map(str.strip, data[1].split(","))))) > 2
-                ):  # URI, username and api_key exists
+                    len((result := list(map(str.strip, data[1].split(","))))) > 3
+                ):  # URI, api_type, username and api_key exists
                     logging.debug(f"URI Found: {result[0]}")
                     logging.debug(f"USER NAME Found for {result[0]}")
                     logging.debug(f"API KEY Found for {result[0]}")
-                    result_list[data[0]] = [data[0], result[0], result[1], result[2]]
-                elif len(result) > 1:  # URI and username exists
+                    result_list[data[0]] = [
+                        data[0],
+                        result[0],
+                        result[1],
+                        result[2],
+                        result[3],
+                    ]
+                elif len(result) > 2:  # URI, api_type and username exists
                     logging.debug(f"URI Found: {result[0]}")
                     logging.debug(f"USER NAME Found for {result[0]}")
                     logging.debug(f"API KEY N/A for {result[0]}")
-                    result_list[data[0]] = [data[0], result[0], result[1], ""]
+                    result_list[data[0]] = [
+                        data[0],
+                        result[0],
+                        result[1],
+                        result[2],
+                        "",
+                    ]
+                elif len(result) > 1:  # URI and api_type exists
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME N/A for {result[0]}")
+                    logging.debug(f"API KEY N/A for {result[0]}")
+                    result_list[data[0]] = [data[0], result[0], result[1], "", ""]
                 elif (
                     len(result) > 0 and result[0] != ""
                 ):  # URI exist, all other data missing
                     logging.debug(f"URI Found: {result[0]}")
                     logging.debug(f"USER NAME N/A for {result[0]}")
                     logging.debug(f"API KEY N/A for {result[0]}")
-                    result_list[data[0]] = [data[0], result[0], "", ""]
+                    result_list[data[0]] = [data[0], result[0], "", "", ""]
                 else:
                     logging.warning(
                         f"Found broken key {data[0]} in [URI] - Please fix or remove."
                     )
+
+            for result in result_list:
+                if (api := result_list[result][2]) and api in ["danbooru", "gelbooru"]:
+                    logging.debug(f"API_TYPE Found: {api} for {result}")
+                else:
+                    logging.warning(f"Could not find API Type for {result}")
+                    api_type = backend.determine_api(result_list[result][1])
+                    logging.warning(
+                        f"Determined API Type of {api_type} for {result}"
+                        f" Please add to config file as such: "
+                        f"{result}={result_list[result][1]},{api_type},<user_name>,<api_key>"
+                    )
+                    result_list[result][2] = api_type
         else:
             logging.error(
                 "No URI Section Found - Please ensure config is set up correctly"
@@ -412,7 +444,8 @@ class Config:
             "???": "false",
         }
         config["URI"] = {
-            "; Place the Booru data here in this order: url, username [Optional], api_key [Optional]": None,
+            "; Place the Booru data here in this order: url, api_type [Optional but recommended], "
+            "username [Optional], api_key [Optional]": None,
             "insert_nickname_for_uri": "",
         }
         config["Default"] = {

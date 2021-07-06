@@ -5,8 +5,7 @@ description = "Automatic Downloading of any booru!"
 authors = ["Nate Ruppert <nate.ruppert@csu.fullerton.edu>"]
 license = "MIT"
 packages = [
-    { include = "main.py" },
-    { include = "library/*.py" },
+    { include = "booru_dl" },
 ]
 
 [tool.poetry.dependencies]

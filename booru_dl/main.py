@@ -71,6 +71,7 @@ class Downloader:
         the booru site provided until a flag is reached (eg. Past days allowed, end of
         provided input from booru site)
         """
+        func_result = 0
         start = time.time()
         for section_name in self.config.posts:
             logging.info(f'Beginning Download of section "{section_name}"')
@@ -100,11 +101,25 @@ class Downloader:
                             before_id,
                             booru_api=booru_type,
                         )
-                    # DEBUG print(self.package)
-                    self.get_posts(section, api, booru_type)
+                    # Check for file collection issues
+                    if not func_result:
+                        func_result = self.get_posts(section, api, booru_type)
+                        if func_result == 1:
+                            logging.error(
+                                f"Problem with post collection for api {api} - Too High post requirements likely"
+                            )
+                    else:
+                        self.get_posts(section, api, booru_type)
+                else:
+                    logging.error(
+                        f"Detected broken API {api} - Remove from config or send info to developer if bug"
+                    )
+                    func_result = 1
+
         logging.info(
             f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
         )
+        return func_result  # if any post collection failed should return 1
 
     # TODO: refactor this into backend and/or combine with already available backend.request_uri()
     # TODO: remove session from required variables as it is a global class variable
@@ -206,6 +221,7 @@ class Downloader:
                 logging.warning(
                     f"No Data for API {url} - Perhaps the requirements are too high"
                 )
+                return 1
 
             for post in current_batch:
                 searched_posts += 1
@@ -354,6 +370,7 @@ class Downloader:
         logging.info(
             f'All done! Execution took {end - start:.2f} seconds for "{section.name}"'
         )
+        return 0
 
 
 if __name__ == "__main__":

@@ -261,7 +261,9 @@ class Config:
                 if (api := result_list[result][2]) and api in ["danbooru", "gelbooru"]:
                     logging.debug(f"API_TYPE Found: {api} for {result}")
                 else:
-                    logging.warning(f"Could not find API Type for {result}")
+                    logging.warning(
+                        f"Could not find API Type for {result} - Attempting to auto-determine"
+                    )
                     api_type = backend.determine_api(result_list[result][1])
                     logging.warning(
                         f"Determined API Type of {api_type} for {result}"

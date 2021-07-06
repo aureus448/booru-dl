@@ -83,7 +83,7 @@ class Downloader:
             for api in section.api_endpoint:
                 booru_type = self.config.uri[api][2]
                 if booru_type != "None":
-                    logging.info(f"Beginning collection from {api} [{section_name}")
+                    logging.info(f"Beginning collection from '{api}' [{section_name}]")
                     before_id = 10000000
                     if len(section.rating) > 1:
                         self.package = format_package(
@@ -187,6 +187,7 @@ class Downloader:
         # Sections stuff
         max_time = section.days * 86400  # seconds
         min_faves = section.min_faves
+        min_score = section.min_score
 
         package = self.package
 
@@ -228,25 +229,15 @@ class Downloader:
                 # Simple profiling setup
                 post_start = time.time()
 
-                # TODO: update key collection to use multiple api endpoints - recommend refactor to separate function
-                last_id = int(
-                    (post_id := post["id"])
-                )  # Set the new last_id to the last available post ran
-                # Check for bad extensions
-                if "file_url" in post:
-                    file_ext = post["file_url"].split("/")[-1].split(".")[-1]
-                    file = post["file_url"]
-                elif "file" in post and "url" in post["file"]:
-                    if post["file"]["url"]:
-                        file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
-                        file = post["file"]["url"]
-                    else:
-                        logging.warning(
-                            f"File access for Post {post_id} blocked by site - possibly requires API access"
-                        )
-                        continue
-                else:
-                    continue  # unknown post type
+                # Attempt collection of post attributes - skip post if issues
+                try:
+                    last_id = post_id = self.collect_post_id(post)
+                    file_ext, file = self.collect_post_file(post, post_id)
+                    tags = self.collect_post_tags(post, post_id)
+                except ValueError:
+                    continue
+                except AssertionError:
+                    continue
 
                 if file_ext not in section.allowed_types:
                     logging.debug(
@@ -255,29 +246,14 @@ class Downloader:
                     )
                     continue
 
-                # TODO: update tags section to be modular - recommend refactor this into backend or separate function
-                # Metadata - TODO re-enable typed tags
-                if "tags" in post:
-                    if type(post["tags"]) == str:
-                        tags = post["tags"]
-                    elif type(post["tags"]) == dict:
-                        tags = (
-                            (category := post["tags"])["general"]
-                            + category["species"]
-                            + category["character"]
-                            + category["copyright"]
-                            + category["artist"]
-                            + category["invalid"]
-                            + category["lore"]
-                            + category["meta"]
-                        )
-                    else:
-                        continue  # unknown post type
-                elif "tag_string" in post:
-                    tags = post["tag_string"]
+                # Collect post score
+                if "score" in post and type(post["score"]) == int:
+                    score = post["score"]
+                elif "score" in post and type(post["score"]) == dict:
+                    score = post["score"]["total"]
                 else:
-                    continue  # unknown post type
-                # score = post["score"]["total"] #TODO unused but could be useful
+                    continue  # unknown score type
+
                 faves = post["fav_count"] if "fav_count" in post else 0
                 rating = post["rating"]
 
@@ -291,20 +267,25 @@ class Downloader:
 
                     # TODO refactor all checks to separate function - also re-add min_score test
                 # Check for invalid files
-                if rating not in section.rating:
-                    # print(f'Debug: Rating wrong {post_id}')
-                    continue
                 if start - post_time > max_time:  # invalid time
                     # print(f'Debug: Too low time {post_id}')
                     last_id = 0
                     break
+                if rating not in section.rating:
+                    # print(f'Debug: Rating wrong {post_id}')
+                    continue
                 if faves < min_faves:  # invalid favcount
                     logging.debug(
                         f"Post {post_id} has {faves} favorites "
                         f"(Lower than criteria of {min_faves}) - Skipping file"
                     )
                     continue
-
+                if score < min_score:  # invalid score
+                    logging.debug(
+                        f"Post {post_id} has {score} score "
+                        f"(Lower than criteria of {min_score}) - Skipping file"
+                    )
+                    continue
                 # Check if any blacklisted tags exist, and if so skip
                 blacklisted = False
                 for tag in tags:  # invalid tags
@@ -328,7 +309,7 @@ class Downloader:
                 # TODO refactor this to use the function to obtain file url for multi endpoints
                 # Download the file if not blacklisted and stuff
                 file_name = self.download_file(
-                    self.session, file, section.name, str(post_id)
+                    self.session, file, f"{section.name}/{url}", str(post_id)
                 )  # 3rd argument is file name (optional)
                 if file_name == 1:
                     skipped_files += 1
@@ -347,11 +328,22 @@ class Downloader:
 
             # TODO Add info on which URI is being searched - add support for multiple api searches simultaneously
             #  this will require multiprocessing and refactor of code body of function to a parameterized function
-            if searched_posts > 0:
+            if searched_posts > 0 and len(current_batch) > 0:
                 logging.info(
                     f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
                     f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
                 )
+            # If less than 10% of files are touched after 5 or more loops (wasted effort)
+            if (
+                searched_posts > 0
+                and (100 * ((total_posts + skipped_files) / searched_posts)) < 10
+                and loop >= 5
+            ):
+                logging.error(
+                    f"Limited posts were downloaded after {loop} search loops - "
+                    f"Please ensure your configuration is reasonable to prevent wasted searches"
+                )
+                break
             logging.debug(
                 f"{total_posts + skipped_files} Files collected (or cached); {searched_posts} Searched"
             )
@@ -361,16 +353,178 @@ class Downloader:
                 )
                 break
             # Reached end of possible images to download
-            if len(current_batch) < 300:
+            if (
+                len(current_batch) < 20
+            ):  # assume minimum size of 20 - TODO per-api check of return amount
                 break
             else:
                 loop += 1
                 package["page"] = f"b{last_id}"
         end = time.time()
         logging.info(
-            f'All done! Execution took {end - start:.2f} seconds for "{section.name}"'
+            f'All done! Execution took {end - start:.2f} seconds for "{section.name}" [API {url}]'
         )
         return 0
+
+    def collect_key(self, expected_types: list, post: dict, id=None):
+        """Collect post keys based on expected types
+
+        This helper function determines what key is found and then passes resulting data and key type to
+        the function that called it.
+
+        Args:
+            expected_types (list of string): Keys expected to be found in the API result
+            post (dict): The full JSON-typed post data used to collect data from
+
+        Returns:
+            str: Successful API key found for metadata
+
+        Raises:
+            KeyError: if keys don't exist at all - provides full dictionary back to help in debugging
+        """
+        result_key = [
+            key for key in expected_types for posts in post.keys() if key == posts
+        ]
+        if len(result_key) > 1:
+            if id:
+                logging.warning(
+                    f"Multiple valid keys found - Something is wrong with post {id}"
+                )
+                logging.warning(f"Valid keys were: {result_key}")
+            else:
+                logging.warning(
+                    f"Multiple valid keys found - Something is wrong with post {post[result_key[0]]}"
+                )
+                logging.warning(f"Valid keys were: {result_key}")
+            return result_key[0]
+        elif result_key:
+            return result_key[0]
+        else:
+            raise KeyError(f"No Expected keys found for {post}")
+
+    def collect_post_id(self, post: dict):
+        """Collect post ID from a given JSON-typed post
+
+        Args:
+            post (dict): Post to perform analysis on
+
+        Returns:
+            int: Post ID
+
+        Raises:
+            ValueError: Unknown ID type for post [Missing keys]
+            AssertionError: ``ID`` variable was not properly set to int-type or not found
+        """
+        keys = ["id"]
+        id = 0
+        try:
+            result = self.collect_key(keys, post)
+            if result == "id":
+                if type(post["id"]) == str:
+                    id = int(post["id"])
+                elif type(post["id"]) == int:
+                    id = post["id"]
+                else:
+                    raise ValueError(
+                        f'Unknown type for ID {post["id"]} [{type(post["id"])}]'
+                    )
+        except KeyError as e:
+            logging.debug(e)  # Key issue
+            logging.error("Cannot find post ID for API file - Possibly hidden file")
+        except ValueError as e:
+            logging.error(e)  # Value issue
+            raise e
+        assert type(id) == int and id > 0
+        return id
+
+    def collect_post_tags(self, post: dict, id: int):
+        """Collect post tags from a given JSON-typed post
+
+        Args:
+            post (dict): Post to perform analysis on
+
+        Returns:
+            list: List of strings of tags for the post
+
+        Raises:
+            ValueError: Unknown tag type for post [Missing keys]
+            AssertionError: ``Tag`` variable was not properly set to a list of strings
+        """
+        keys = ["tags", "tag_string"]
+        tags = None
+        try:
+            result = self.collect_key(keys, post, id)
+            if result == "tags":
+                if type(post["tags"]) == str:
+                    tags = post["tags"].split()
+                elif type(post["tags"]) == dict:
+                    tags = (
+                        (category := post["tags"])["general"]
+                        + category["species"]
+                        + category["character"]
+                        + category["copyright"]
+                        + category["artist"]
+                        + category["invalid"]
+                        + category["lore"]
+                        + category["meta"]
+                    )
+                else:
+                    raise ValueError(
+                        f'Unknown type for tags {post["tags"]} [{type(post["tags"])}]'
+                    )
+            elif result == "tag_string":
+                tags = post["tag_string"].split()
+
+        except KeyError as e:
+            logging.error(e)  # Key issue
+        except ValueError as e:
+            logging.error(e)  # Value issue
+            raise e
+        assert type(tags) == list
+        return tags
+
+    def collect_post_file(self, post: dict, id: int):
+        """Collect post file from a given JSON-typed post
+
+        Args:
+            post (dict): Post to perform analysis on
+            id (int): ID of given post for logging of issues
+
+        Returns:
+            tuple of str: File extension and File URL
+
+        Raises:
+            ValueError: Unknown file_url type for post [Missing keys]
+            AssertionError: ``file_ext`` and ``file`` variable were not properly set to strings
+        """
+        keys = ["file_url", "file"]
+        file = None
+        file_ext = None
+        try:
+            result = self.collect_key(keys, post)
+            if result == "file_url":
+                if type(post["file_url"]) == str:
+                    file_ext = post["file_url"].split("/")[-1].split(".")[-1]
+                    file = post["file_url"]
+                else:
+                    raise ValueError(
+                        f'Unknown type for tags {post["file_url"]} [{type(post["file_url"])}]'
+                    )
+            elif result == "file" and "url" in post["file"]:
+                if post["file"]["url"]:
+                    file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
+                    file = post["file"]["url"]
+                else:
+                    logging.warning(
+                        f"File access for Post {id} blocked by site - possibly requires API access"
+                    )
+        except KeyError as e:
+            logging.error(e)  # Key issue
+        except ValueError as e:
+            logging.error(e)  # Value issue
+            raise e
+        assert type(file) == str and type(file_ext) == str
+        return file_ext, file
 
 
 if __name__ == "__main__":

@@ -260,6 +260,10 @@ class Config:
             for result in result_list:
                 if (api := result_list[result][2]) and api in ["danbooru", "gelbooru"]:
                     logging.debug(f"API_TYPE Found: {api} for {result}")
+                elif api == "None":
+                    logging.warning(
+                        f"Found None-Type API for {result} - Please remove API from config"
+                    )
                 else:
                     logging.warning(
                         f"Could not find API Type for {result} - Attempting to auto-determine"

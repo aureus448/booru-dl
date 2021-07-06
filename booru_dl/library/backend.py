@@ -154,15 +154,25 @@ def request_uri(
         else:
             return result
     else:
-        if not silent:
-            logging.error(
-                "Request for {0} failed. Error code {1}".format(url, result.status_code)
-            )
+        if result.status_code == 422:  # Invalid tagging request
+            # limit search to 2 tags if 422 is thrown [Locked/Bad request]
+            package["tags"] = " ".join(str(package["tags"]).split(" ")[:2])  # type: ignore
+            result = session.get(url, params=package)
+            if result.status_code == 200:
+                return result
+            else:
+                raise requests.RequestException(result.status_code)
         else:
-            logging.debug(
-                "Request for {0} failed. Error code {1}".format(url, result.status_code)
-            )
-        raise requests.RequestException(result.status_code)
+            if not silent:
+                logging.error(
+                    f"Request for {url} failed. Error code {result.status_code}"
+                )
+                print(result.url)
+            else:
+                logging.debug(
+                    f"Request for {url} failed. Error code {result.status_code}"
+                )
+            raise requests.RequestException(result.status_code)
 
 
 # def timer(start_time, name="URI Request", optional_clarifier=""):
@@ -297,7 +307,7 @@ def format_package(
     tags: typing.List[str],
     before_id: int,
     booru_api: str,
-) -> typing.Dict[str, str]:
+) -> typing.Dict[str, object]:
     """Formats package for session handler
 
     Package is a attribute used across the class to POST request data from
@@ -324,10 +334,12 @@ def format_package(
 
         special formatting for:
         page (b<post_id>)
+        limit (assumes 200 allowed)
         """
         package = {
             "page": f"b{before_id}",
             "tags": " ".join(tags),  # Reminder: hard limit of 4 tags
+            "limit": 200,
         }
     elif booru_api == "gelbooru":
         """

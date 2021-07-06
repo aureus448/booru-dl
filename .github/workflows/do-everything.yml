@@ -26,6 +26,7 @@ jobs:
         if: ${{ github.event_name == 'schedule' }}
         run: test -z $(git rev-list  --after="24 hours"  ${{ github.sha }}) && echo "::set-output name=should_run::false"
   build_sphinx_job:
+    if: github.ref == 'refs/heads/main'
     needs: check_date
     name: Build Documentation
     runs-on: ubuntu-latest
@@ -95,7 +96,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
         include:
           - os: ubuntu-latest
             path: ~/.cache/pip

@@ -16,7 +16,7 @@ This program auto-guides the user through the process of setting up the Download
 
 ### Python
 * Run `git clone https://github.com/aureus448/booru-dl.git && git checkout tags/v1.0`
-    * Slight note: If running via Windows Powershell, run `git clone https://github.com/aureus448/booru-dl.git; git checkout tags/v1.0`
+  * Slight note: If running via Windows Powershell, run `git clone https://github.com/aureus448/booru-dl.git; git checkout tags/v1.0`
 * Run `cd booru-dl`
 * Create a virtual environment for Python if desired - steps not provided [`python -m venv venv` ***Use if you understand what this does***]
 * Run `pip install -r requirements.txt`

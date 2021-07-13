@@ -52,6 +52,15 @@ def test__get_uri(test_urls, run_all, collect_config):
         ] = ""  # Should produce warning of missing data
         collect_config.parser["URI"]["test_4"] = f"{test_urls}"
         collect_config.parser["URI"]["test_5"] = f"{test_urls}"
+        collect_config.parser["URI"][
+            "test_6"
+        ] = f"{test_urls},None, test_user, test_api"  # None-type for API type (bad)
+        collect_config.parser["URI"][
+            "test_7"
+        ] = f"{test_urls},danbooru, test_user, test_api"  # Existing API type
+        collect_config.parser["URI"][
+            "test_8"
+        ] = f"{test_urls},gelbooru"  # Api type, Missing user/api key
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
     assert type(collect_config.uri) == dict
     assert type(collect_config.uri["test_0"]) == list

@@ -234,8 +234,6 @@ class Downloader:
                     last_id = post_id = self.collect_post_id(post)
                     file_ext, file = self.collect_post_file(post, post_id)
                     tags = self.collect_post_tags(post, post_id)
-                except ValueError:
-                    continue
                 except AssertionError:
                     continue
 
@@ -247,12 +245,11 @@ class Downloader:
                     continue
 
                 # Collect post score
+                score = 0
                 if "score" in post and type(post["score"]) == int:
                     score = post["score"]
                 elif "score" in post and type(post["score"]) == dict:
                     score = post["score"]["total"]
-                else:
-                    continue  # unknown score type
 
                 faves = post["fav_count"] if "fav_count" in post else 0
                 rating = post["rating"]
@@ -280,6 +277,7 @@ class Downloader:
                         f"(Lower than criteria of {min_faves}) - Skipping file"
                     )
                     continue
+
                 if score < min_score:  # invalid score
                     logging.debug(
                         f"Post {post_id} has {score} score "
@@ -415,22 +413,21 @@ class Downloader:
             ValueError: Unknown ID type for post [Missing keys]
             AssertionError: ``ID`` variable was not properly set to int-type or not found
         """
-        keys = ["id"]
+        # keys = ["id"] Key will only be ID (as far as I know*)
         id = 0
         try:
-            result = self.collect_key(keys, post)
-            if result == "id":
-                if type(post["id"]) == str:
-                    id = int(post["id"])
-                elif type(post["id"]) == int:
-                    id = post["id"]
-                else:
-                    raise ValueError(
-                        f'Unknown type for ID {post["id"]} [{type(post["id"])}]'
-                    )
+            if type(post["id"]) == str:
+                id = int(post["id"])
+            elif type(post["id"]) == int:
+                id = post["id"]
+            else:
+                raise ValueError(
+                    f'Unknown type for ID {post["id"]} [{type(post["id"])}]'
+                )
         except KeyError as e:
             logging.debug(e)  # Key issue
             logging.error("Cannot find post ID for API file - Possibly hidden file")
+            raise e
         except ValueError as e:
             logging.error(e)  # Value issue
             raise e
@@ -477,6 +474,7 @@ class Downloader:
 
         except KeyError as e:
             logging.error(e)  # Key issue
+            raise e
         except ValueError as e:
             logging.error(e)  # Value issue
             raise e
@@ -508,7 +506,7 @@ class Downloader:
                     file = post["file_url"]
                 else:
                     raise ValueError(
-                        f'Unknown type for tags {post["file_url"]} [{type(post["file_url"])}]'
+                        f'Unknown type for file_url {post["file_url"]} [{type(post["file_url"])}]'
                     )
             elif result == "file" and "url" in post["file"]:
                 if post["file"]["url"]:
@@ -518,8 +516,11 @@ class Downloader:
                     logging.warning(
                         f"File access for Post {id} blocked by site - possibly requires API access"
                     )
+            else:
+                raise ValueError("Unknown type for file - No Data")
         except KeyError as e:
             logging.error(e)  # Key issue
+            raise e
         except ValueError as e:
             logging.error(e)  # Value issue
             raise e

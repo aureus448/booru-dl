@@ -1,5 +1,5 @@
 from booru_dl.library.config import Config
 from booru_dl.main import Downloader
 
-if Config and Downloader:
-    pass  # Ignore F401 from flake8
+# Ignore: Used to prevent F401 from Flake8
+test_str = (Config, Downloader)

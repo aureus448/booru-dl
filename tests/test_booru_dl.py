@@ -62,6 +62,26 @@ def create_config(request):
         "ignore_tags": "canine",
         "allowed_types": "png",
     }
+    # will trigger score miss & [in some cases] too many tags error
+    conf_result.parser["Main Test/Score_Trigger"] = {
+        "days": "5",
+        "ratings": "q, e",
+        "min_score": "200",
+        "min_faves": "200",
+        "tags": "canine, pikachu, tag3",
+        "ignore_tags": "canine",
+        "allowed_types": "png",
+    }
+    # Will trigger null-json response
+    conf_result.parser["Main Test/Data_Miss"] = {
+        "days": "5",
+        "ratings": "q, e",
+        "min_score": "200",
+        "min_faves": "200",
+        "tags": "bad_tag",
+        "ignore_tags": "canine",
+        "allowed_types": "png",
+    }
 
     conf_result.parser["URI"]["test_uri"] = request.param  # Required test field
     conf_result.uri = conf_result._get_uri()  # re-run uri collection
@@ -183,3 +203,70 @@ def test_download_files_already_exist(download_file_exist):
 #         assert os.path.isdir(path)
 #     # Note: download_file is not used but is included to prevent
 #     # post-yield statement execution prematurely occurring
+
+
+@pytest.mark.parametrize(
+    "data_s, error",
+    zip(
+        [{"file_url": ["bad_data"]}, {"file": ["bad_data"]}, {"non": ["bad_data"]}],
+        [ValueError, ValueError, KeyError],
+    ),
+)
+def test_collect_post_file(data_s: dict, error, download_file):
+    with pytest.raises(error):
+        download_file.collect_post_file(data_s, 0)
+
+
+@pytest.mark.parametrize(
+    "data_s, error",
+    zip(
+        [
+            {"tag_string": "bad_data test"},
+            {"tags": ["bad_data"]},
+            {"non": ["bad_data"]},
+        ],
+        [None, ValueError, KeyError],
+    ),
+)
+def test_collect_post_tags(data_s: dict, error, download_file):
+    if error:
+        with pytest.raises(error):
+            download_file.collect_post_tags(data_s, 0)
+    else:
+        download_file.collect_post_tags(data_s, 0)
+
+
+@pytest.mark.parametrize(
+    "data_s, error",
+    zip(
+        [{"id": ["bad_data"]}, {"id": "1"}, {"non": ["bad_data"]}],
+        [ValueError, None, KeyError],
+    ),
+)
+def test_collect_post_id(data_s: dict, error, download_file):
+    if error:
+        with pytest.raises(error):
+            download_file.collect_post_id(data_s)
+    else:
+        download_file.collect_post_id(data_s)
+
+
+@pytest.mark.parametrize(
+    "data_s, error",
+    zip(
+        [
+            {"id": ["bad_data"], "id2": []},
+            {"id": ["bad_data"], "id2": [], "id3": []},
+            {"a": "str"},
+        ],
+        [None, None, KeyError],
+    ),
+)
+def test_collect_key(data_s: dict, error, download_file):
+    if len(data_s) > 2:
+        download_file.collect_key(["id", "id2", "id3"], data_s)
+    elif len(data_s) > 1:
+        download_file.collect_key(["id", "id2", "id3"], data_s, 1)
+    else:
+        with pytest.raises(error):
+            download_file.collect_key(["id", "id2", "id3"], data_s)

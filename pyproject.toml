@@ -5,13 +5,13 @@ description = "Automatic Downloading of any booru!"
 authors = ["Nate Ruppert <nate.ruppert@csu.fullerton.edu>"]
 license = "MIT"
 packages = [
-    { include = "main.py" },
-    { include = "library/*.py" },
+    { include = "booru_dl" },
 ]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 requests = "^2.25.1"
+cloudscraper = "^1.2.58"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -25,6 +25,7 @@ black = "^21.6b0"
 pytest-cov = "^2.12.1"
 pyinstaller = "^4.3"
 auto-py-to-exe = "^2.9.0"
+pytest-xdist = "^2.3.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

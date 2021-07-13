@@ -5,6 +5,11 @@ import pytest
 
 from booru_dl.library import config
 
+# Example
+# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
+# def test_eval(test_input, expected):
+#     assert eval(test_input) == expected
+
 
 def test__get_config(collect_config):
     """Ensure config was produced correctly"""
@@ -20,57 +25,81 @@ def test__get_useragent_unknown(collect_config):
     assert "unknown" in collect_config.useragent
 
 
-def test__get_useragent_provided_username(collect_config):
-    """Check Useragent was collected properly"""
-    collect_config.parser["URI"]["api"] = "test_api_key"
-    collect_config.parser["URI"]["user"] = "test_user"
-    (
-        collect_config.api,
-        collect_config.user,
-    ) = collect_config._get_api_key()  # re-run api collection
-    collect_config.useragent = collect_config._get_useragent()
-    assert "test_user" in collect_config.useragent
+# def test__get_useragent_provided_username(collect_config):
+#     """Check Useragent was collected properly"""
+#     collect_config.parser["URI"]["api"] = "test_api_key"
+#     collect_config.parser["URI"]["user"] = "test_user"
+#     (
+#         collect_config.api,
+#         collect_config.user,
+#     ) = collect_config._get_api_key()  # re-run api collection
+#     collect_config.useragent = collect_config._get_useragent()
+#     assert "test_user" in collect_config.useragent
 
 
-def test__get_uri(collect_config):
-    """Force set URI to something to see if URI collection is correct"""
-    collect_config.parser["URI"]["uri"] = "https://test_uri.com"
+@pytest.mark.parametrize(
+    "test_urls, run_all",
+    zip(os.environ["urls"].split(", "), [True, False, False, False, False]),
+)
+def test__get_uri(test_urls, run_all, collect_config):
+    """Tests the config ability to collect available uris"""
+    collect_config.parser["URI"]["test_0"] = f"{test_urls}"
+    if run_all:
+        collect_config.parser["URI"]["test_1"] = f"{test_urls}, ,test_user"
+        collect_config.parser["URI"]["test_2"] = f"{test_urls},, test_user, test_api"
+        collect_config.parser["URI"][
+            "test_3"
+        ] = ""  # Should produce warning of missing data
+        collect_config.parser["URI"]["test_4"] = f"{test_urls}"
+        collect_config.parser["URI"]["test_5"] = f"{test_urls}"
+        collect_config.parser["URI"][
+            "test_6"
+        ] = f"{test_urls},None, test_user, test_api"  # None-type for API type (bad)
+        collect_config.parser["URI"][
+            "test_7"
+        ] = f"{test_urls},danbooru, test_user, test_api"  # Existing API type
+        collect_config.parser["URI"][
+            "test_8"
+        ] = f"{test_urls},gelbooru"  # Api type, Missing user/api key
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
-    assert collect_config.uri == "https://test_uri.com"
+    assert type(collect_config.uri) == dict
+    assert type(collect_config.uri["test_0"]) == list
+    assert collect_config.uri["test_0"][2] in ["danbooru", "gelbooru", "None"]
 
 
 def test__get_uri_fail_on_missing(collect_config):
     """Force set URI to fail"""
     with pytest.raises(ValueError):
         # replace dict with one that doesn't include uri
-        collect_config.parser["URI"] = {"api": "code_crasher"}
+        del collect_config.parser["URI"]
         collect_config.uri = collect_config._get_uri()  # re-run uri collection
 
 
-def test__get_api_key(collect_config):
-    """Force set API key and user to something to see if collection is correct"""
-    collect_config.parser["URI"]["api"] = "test_api_key"
-    collect_config.parser["URI"]["user"] = "test_user"
-    (
-        collect_config.api,
-        collect_config.user,
-    ) = collect_config._get_api_key()  # re-run api collection
-    assert collect_config.api == "test_api_key" and collect_config.user == "test_user"
+# def test__get_api_key(collect_config):
+#     """Force set API key and user to something to see if collection is correct"""
+#     collect_config.parser["URI"]["api"] = "test_api_key"
+#     collect_config.parser["URI"]["user"] = "test_user"
+#     (
+#         collect_config.api,
+#         collect_config.user,
+#     ) = collect_config._get_api_key()  # re-run api collection
+#     assert collect_config.api == "test_api_key" and collect_config.user == "test_user"
 
 
-def test__get_api_key_missing_config(collect_config):
-    """API key and User key missing (Either or, both are needed or code path skips)"""
-    collect_config.parser["URI"] = {"uri": "code_crasher"}
-    (
-        collect_config.api,
-        collect_config.user,
-    ) = collect_config._get_api_key()  # re-run api collection
-    assert not collect_config.api and not collect_config.user
+# def test__get_api_key_missing_config(collect_config):
+#     """API key and User key missing (Either or, both are needed or code path skips)"""
+#     collect_config.parser["URI"] = {"uri": "code_crasher"}
+#     (
+#         collect_config.api,
+#         collect_config.user,
+#     ) = collect_config._get_api_key()  # re-run api collection
+#     assert not collect_config.api and not collect_config.user
 
 
 def test__get_booru_data(collect_config):
     """Changes the uri and sees if it propagates properly to booru data"""
-    collect_config.parser["URI"]["uri"] = (main_uri := "https://test_uri.com")
+    test_urls = os.environ["urls"].split(", ")
+    collect_config.parser["URI"]["test_uri"] = (main_uri := f"{test_urls[0]}")
     collect_config.uri = collect_config._get_uri()  # re-run uri collection
     collect_config.paths = collect_config._get_booru_data()  # re-run path collection
     expected = dict(
@@ -78,7 +107,7 @@ def test__get_booru_data(collect_config):
         TAG_URI=f"{main_uri}/tags.json",
         ALIAS_URI=f"{main_uri}/tag_aliases.json",
     )
-    assert str(expected.values()) == str(collect_config.paths.values())
+    assert str(expected.values()) == str(collect_config.paths["test_uri"].values())
 
 
 def test__parse_config(collect_config):

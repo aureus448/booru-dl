@@ -134,3 +134,5 @@ dmypy.json
 downloads/
 /do_not_include.py
 output/
+/.secrets
+*.ico

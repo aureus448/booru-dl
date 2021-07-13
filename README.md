@@ -16,7 +16,7 @@ This program auto-guides the user through the process of setting up the Download
 
 ### Python
 * Run `git clone https://github.com/aureus448/booru-dl.git && git checkout tags/v1.0`
-    * Slight note: If running via Windows Powershell, run `git clone https://github.com/aureus448/booru-dl.git; git checkout tags/v1.0`
+  * Slight note: If running via Windows Powershell, run `git clone https://github.com/aureus448/booru-dl.git; git checkout tags/v1.0`
 * Run `cd booru-dl`
 * Create a virtual environment for Python if desired - steps not provided [`python -m venv venv` ***Use if you understand what this does***]
 * Run `pip install -r requirements.txt`
@@ -41,7 +41,7 @@ A default configuration will be created on first run if none is provided.
 A configuration file is required to have the following data sections/fields:
 
 1. URI
-    * uri: URL/URI of booru website (Ex. https://google.com)
+    * uri: URL/URI of booru website (Ex. <https://google.com>)
     * ``OPTIONAL`` api: API key for the booru website
     * ``SEMI-OPTIONAL`` user: Username for the booru website
 
@@ -92,14 +92,12 @@ from crashing and/or unexpected code behavior.
 
     And in this vein, missing section data is set to the defaults values either provided above or in the config.
 
-## Warning for booru-dl.exe:
+## Warning for booru-dl.exe
 If you see `Trojan:Win32/Wacatac.B!ml` or `Program:Win32/Wacapew.C!ml` and are worried about booru-dl.exe, please see:
-* https://stackoverflow.com/questions/43777106/program-made-with-pyinstaller-now-seen-as-a-trojan-horse-by-avg
-* https://stackoverflow.com/questions/54733909/windows-defender-alert-users-from-my-pyinstaller-exe
-* https://stackoverflow.com/questions/64788656/exe-file-made-with-pyinstaller-being-reported-as-a-virus-threat-by-windows-defen
+* <https://stackoverflow.com/questions/43777106/program-made-with-pyinstaller-now-seen-as-a-trojan-horse-by-avg>
+* <https://stackoverflow.com/questions/54733909/windows-defender-alert-users-from-my-pyinstaller-exe>
+* <https://stackoverflow.com/questions/64788656/exe-file-made-with-pyinstaller-being-reported-as-a-virus-threat-by-windows-defen>
 
 There is no Trojan, but for some reason the Pre-installed/compiled Python bootloader (part of Python's standard library) is flagged as a virus, meaning any program that includes that bootloader (py2exe, pyinstaller, auto-py-to-exe, etc) will always be seen as a virus unless compiled from scratch. I'll consider doing this for myself.
 
 See: [Here](https://www.virustotal.com/gui/file/d34789e7ac425b842788c2b67517181a58a4b56d84fa4c46a378db85d9f81216/detection) for VirtusTotal scan - Microsoft flags the file where any other respected anti-virus (ZoneAlarm, Bitdefender...) doesn't
-
-#### Tested with e926 as API endpoint - other boorus will likely not work (yet)

@@ -15,7 +15,6 @@ import logging
 import os
 import pathlib
 import time
-import typing
 from datetime import datetime
 from time import sleep
 
@@ -23,6 +22,7 @@ import requests
 
 from booru_dl.library import backend
 from booru_dl.library import config as cfg
+from booru_dl.library.backend import format_package
 
 
 class Downloader:
@@ -56,11 +56,14 @@ class Downloader:
         self.session = backend.get_session(self.config.useragent)  # Get useragent
 
         # Collects metadata
+        # TODO add support for multiple uri, api_keys, and usernames - will be implemented in config
         self.URI = self.config.uri
-        self.API = self.config.api
-        self.USER = self.config.user
+        # self.API = self.config.api
+        # self.USER = self.config.user
+        # TODO add support for multiple blacklists PER URI (possible but is it needed?)
         self.blacklist = self.config.blacklist
 
+    # TODO refactor get_data to be more modular in format
     def get_data(self):
         """Collects all data from the sections determined on class instantiation
 
@@ -68,52 +71,58 @@ class Downloader:
         the booru site provided until a flag is reached (eg. Past days allowed, end of
         provided input from booru site)
         """
+        func_result = 0
         start = time.time()
         for section_name in self.config.posts:
             logging.info(f'Beginning Download of section "{section_name}"')
             section: cfg.Section = self.config.posts[section_name]
             # 3 tags + score + rating for filtering
-            if len(section.rating) > 1:
-                self.format_package(section.tags[:3] + [f"score:>={section.min_score}"])
-            else:
-                self.format_package(
-                    section.tags[:4]
-                    + [f"score:>={section.min_score}", f"rating:{section.rating[0]}"]
-                )
-            # DEBUG print(self.package)
-            self.get_posts(section)
+            # TODO package must be changed per-api endpoint - will need nested loop to run <Section> per <URI>
+            # TODO also update format_package to support multiple API endpoints (via backend class)
+            #  for best result, will likely need to refactor this into backend OR update get_posts to run format_package
+            for api in section.api_endpoint:
+                booru_type = self.config.uri[api][2]
+                if booru_type != "None":
+                    logging.info(f"Beginning collection from '{api}' [{section_name}]")
+                    before_id = 10000000
+                    if len(section.rating) > 1:
+                        self.package = format_package(
+                            section.tags[:3] + [f"score:>={section.min_score}"],
+                            before_id,
+                            booru_api=booru_type,  # List contains booru type at index 2
+                        )
+                    else:
+                        self.package = format_package(
+                            section.tags[:4]
+                            + [
+                                f"score:>={section.min_score}",
+                                f"rating:{section.rating[0]}",
+                            ],
+                            before_id,
+                            booru_api=booru_type,
+                        )
+                    # Check for file collection issues
+                    if not func_result:
+                        func_result = self.get_posts(section, api, booru_type)
+                        if func_result == 1:
+                            logging.error(
+                                f"Problem with post collection for api {api} - Too High post requirements likely"
+                            )
+                    else:
+                        self.get_posts(section, api, booru_type)
+                else:
+                    logging.error(
+                        f"Detected broken API {api} - Remove from config or send info to developer if bug"
+                    )
+                    func_result = 1
+
         logging.info(
             f"All Sections have been collected (Total execution time of {time.time() - start:.2f}s)"
         )
+        return func_result  # if any post collection failed should return 1
 
-    def format_package(
-        self, tags: typing.List[str], limit: int = 320, before_id: int = 100000000
-    ):
-        """Formats package for session handler
-
-        Package is a attribute used across the class to POST request data from
-        the booru site, and this function provides the proper format for all
-        other functions in the class that use ``self.package``.
-
-        Args:
-            tags (list): List of tags to search for.
-            limit (int): Amount of posts to collect from the booru (Max of 320 for most websites)
-            before_id (int): Last post ID to ignore (used to filter search to a certain page
-                on the booru website)
-
-        Warnings:
-            ``tags`` attribute must be limited to 4 tags or less to properly be
-            used in most booru websites
-        """
-        # Session package
-        package = {
-            "page": f"b{before_id}",
-            "limit": limit,  # Reminder: max limit of 320
-            "tags": " ".join(tags),  # Reminder: hard limit of 4 tags
-        }
-
-        self.package = package
-
+    # TODO: refactor this into backend and/or combine with already available backend.request_uri()
+    # TODO: remove session from required variables as it is a global class variable
     def download_file(
         self, session: requests.Session, url: str, section: str, file_name: str
     ):
@@ -141,15 +150,15 @@ class Downloader:
             return 1
         else:
             os.makedirs(filepath, exist_ok=True)
-        if self.USER and self.API:
-            result = session.get(url, stream=True, auth=(self.USER, self.API))
-        else:
-            result = session.get(url, stream=True)
+        # TODO api broken atm
+        # if self.USER and self.API:
+        #     result = session.get(url, stream=True, auth=(self.USER, self.API))
+        # else:
+        result = session.get(url, stream=True)
         if result.status_code == 200:
             with open(filepath.joinpath(file_name), "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
+                    f.write(chunk)
             logging.debug(f"Downloaded {file_name} to {filepath.joinpath(file_name)}")
             return file_name
         else:
@@ -159,7 +168,10 @@ class Downloader:
             # DEBUG to file
             return -1
 
-    def get_posts(self, section: cfg.Section):
+    # TODO: tags are not yet checked for boorus - eventually add support once api support is done
+    # TODO: update variables used in the function to take global class variables where available
+
+    def get_posts(self, section: cfg.Section, url: str, endpoint: str):
         """Collects all posts given a certain config section and its respective metadata
 
         Note:
@@ -174,6 +186,7 @@ class Downloader:
         # Sections stuff
         max_time = section.days * 86400  # seconds
         min_faves = section.min_faves
+        min_score = section.min_score
 
         package = self.package
 
@@ -187,36 +200,42 @@ class Downloader:
 
         # Main function loop
         while last_id > 1:
-
-            if self.USER and self.API:
-                current_batch = backend.request_uri(
-                    self.session,
-                    self.config.paths["POST_URI"],
-                    package,
-                    (self.USER, self.API),
-                )
-                current_batch = current_batch.json()["posts"]
-
+            # TODO api needs to be fixed
+            # if self.USER and self.API:
+            #     current_batch = backend.request_uri(
+            #         self.session,
+            #         self.config.paths[url]["POST_URI"],
+            #         package,
+            #         (self.USER, self.API),
+            #     )
+            #     current_batch = current_batch.json()["posts"]
+            #
+            # else:
+            current_batch = backend.request_uri(
+                self.session, self.config.paths[url]["POST_URI"], package
+            ).json()
+            if len(current_batch) > 0:
+                if type(current_batch) == dict:
+                    current_batch = current_batch["posts"]
             else:
-                current_batch = backend.request_uri(
-                    self.session, self.config.paths["POST_URI"], package
-                ).json()["posts"]
+                logging.warning(
+                    f"No Data for API {url} - Perhaps the requirements are too high"
+                )
+                return 1
 
             for post in current_batch:
                 searched_posts += 1
                 # Simple profiling setup
                 post_start = time.time()
-                last_id = int(
-                    (post_id := post["id"])
-                )  # Set the new last_id to the last available post ran
-                # Check for bad extensions
-                if post["file"]["url"]:
-                    file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
-                else:
-                    logging.warning(
-                        f"File access for Post {post_id} blocked by site - possibly requires API access"
-                    )
+
+                # Attempt collection of post attributes - skip post if issues
+                try:
+                    last_id = post_id = self.collect_post_id(post)
+                    file_ext, file = self.collect_post_file(post, post_id)
+                    tags = self.collect_post_tags(post, post_id)
+                except AssertionError:
                     continue
+
                 if file_ext not in section.allowed_types:
                     logging.debug(
                         f"Post {post_id} was skipped due to being extension "
@@ -224,30 +243,33 @@ class Downloader:
                     )
                     continue
 
-                # Metadata - TODO re-enable typed tags
-                tags = (
-                    (category := post["tags"])["general"]
-                    + category["species"]
-                    + category["character"]
-                    + category["copyright"]
-                    + category["artist"]
-                    + category["invalid"]
-                    + category["lore"]
-                    + category["meta"]
-                )
-                # score = post["score"]["total"] #TODO unused but could be useful
-                faves = post["fav_count"]
-                rating = post["rating"]
-                post_time = datetime.fromisoformat(post["created_at"]).timestamp()
+                # Collect post score
+                score = 0
+                if "score" in post and type(post["score"]) == int:
+                    score = post["score"]
+                else:  # "score" in post and type(post["score"]) == dict:
+                    score = post["score"]["total"]
 
+                faves = post["fav_count"] if "fav_count" in post else 0
+                rating = post["rating"]
+
+                # TODO refactor time to separate function to support multiple APIs
+                try:
+                    post_time = datetime.fromisoformat(post["created_at"]).timestamp()
+                except ValueError:
+                    post_time = time.mktime(
+                        time.strptime(post["created_at"], "%a %b %d %H:%M:%S %z %Y")
+                    )
+
+                    # TODO refactor all checks to separate function - also re-add min_score test
                 # Check for invalid files
-                if rating not in section.rating:
-                    # print(f'Debug: Rating wrong {post_id}')
-                    continue
                 if start - post_time > max_time:  # invalid time
                     # print(f'Debug: Too low time {post_id}')
                     last_id = 0
                     break
+                if rating not in section.rating:
+                    # print(f'Debug: Rating wrong {post_id}')
+                    continue
                 if faves < min_faves:  # invalid favcount
                     logging.debug(
                         f"Post {post_id} has {faves} favorites "
@@ -255,6 +277,12 @@ class Downloader:
                     )
                     continue
 
+                if score < min_score:  # invalid score
+                    logging.debug(
+                        f"Post {post_id} has {score} score "
+                        f"(Lower than criteria of {min_score}) - Skipping file"
+                    )
+                    continue
                 # Check if any blacklisted tags exist, and if so skip
                 blacklisted = False
                 for tag in tags:  # invalid tags
@@ -275,14 +303,17 @@ class Downloader:
                 if blacklisted:
                     continue
 
+                # TODO refactor this to use the function to obtain file url for multi endpoints
                 # Download the file if not blacklisted and stuff
                 file_name = self.download_file(
-                    self.session, post["file"]["url"], section.name, str(post_id)
+                    self.session, file, f"{section.name}/{url}", str(post_id)
                 )  # 3rd argument is file name (optional)
                 if file_name == 1:
                     skipped_files += 1
                     continue
 
+                # TODO add support for determination of status code errors related to
+                #  too many requests and update timing based on error
                 # Check timing and ensure 2 requests a second compliance
                 post_finish = time.time()
                 post_timing = post_finish - post_start
@@ -292,10 +323,24 @@ class Downloader:
 
                 total_posts += 1  # If reach here post was acquired
 
-            logging.info(
-                f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
-                f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
-            )
+            # TODO Add info on which URI is being searched - add support for multiple api searches simultaneously
+            #  this will require multiprocessing and refactor of code body of function to a parameterized function
+            if searched_posts > 0 and len(current_batch) > 0:
+                logging.info(
+                    f"API Search {loop} - {total_posts} Downloaded / {skipped_files} Already Downloaded "
+                    f"({100 * ((total_posts + skipped_files) / searched_posts):.2f}% posts collected from search)]"
+                )
+            # If less than 10% of files are touched after 5 or more loops (wasted effort)
+            if (
+                searched_posts > 0
+                and (100 * ((total_posts + skipped_files) / searched_posts)) < 10
+                and loop >= 5
+            ):
+                logging.error(
+                    f"Limited posts were downloaded after {loop} search loops - "
+                    f"Please ensure your configuration is reasonable to prevent wasted searches"
+                )
+                break
             logging.debug(
                 f"{total_posts + skipped_files} Files collected (or cached); {searched_posts} Searched"
             )
@@ -305,15 +350,179 @@ class Downloader:
                 )
                 break
             # Reached end of possible images to download
-            if len(current_batch) < 300:
+            if (
+                len(current_batch) < 20
+            ):  # assume minimum size of 20 - TODO per-api check of return amount
                 break
             else:
                 loop += 1
                 package["page"] = f"b{last_id}"
         end = time.time()
         logging.info(
-            f'All done! Execution took {end - start:.2f} seconds for "{section.name}"'
+            f'All done! Execution took {end - start:.2f} seconds for "{section.name}" [API {url}]'
         )
+        return 0
+
+    def collect_key(self, expected_types: list, post: dict, id=None):
+        """Collect post keys based on expected types
+
+        This helper function determines what key is found and then passes resulting data and key type to
+        the function that called it.
+
+        Args:
+            expected_types (list of string): Keys expected to be found in the API result
+            post (dict): The full JSON-typed post data used to collect data from
+
+        Returns:
+            str: Successful API key found for metadata
+
+        Raises:
+            KeyError: if keys don't exist at all - provides full dictionary back to help in debugging
+        """
+        result_key = [
+            key for key in expected_types for posts in post.keys() if key == posts
+        ]
+        if len(result_key) > 1:
+            if id:
+                logging.warning(
+                    f"Multiple valid keys found - Something is wrong with post {id}"
+                )
+                logging.warning(f"Valid keys were: {result_key}")
+            else:
+                logging.warning(
+                    f"Multiple valid keys found - Something is wrong with post {post[result_key[0]]}"
+                )
+                logging.warning(f"Valid keys were: {result_key}")
+            return result_key[0]
+        elif result_key:
+            return result_key[0]
+        else:
+            raise KeyError(f"No Expected keys found for {post}")
+
+    def collect_post_id(self, post: dict):
+        """Collect post ID from a given JSON-typed post
+
+        Args:
+            post (dict): Post to perform analysis on
+
+        Returns:
+            int: Post ID
+
+        Raises:
+            ValueError: Unknown ID type for post [Missing keys]
+            AssertionError: ``ID`` variable was not properly set to int-type or not found
+        """
+        # keys = ["id"] Key will only be ID (as far as I know*)
+        id = 0
+        try:
+            if type(post["id"]) == str:
+                id = int(post["id"])
+            elif type(post["id"]) == int:
+                id = post["id"]
+            else:
+                raise ValueError(
+                    f'Unknown type for ID {post["id"]} [{type(post["id"])}]'
+                )
+        except KeyError as e:
+            logging.debug(e)  # Key issue
+            logging.error("Cannot find post ID for API file - Possibly hidden file")
+            raise e
+        except ValueError as e:
+            logging.error(e)  # Value issue
+            raise e
+        assert type(id) == int and id > 0
+        return id
+
+    def collect_post_tags(self, post: dict, id: int):
+        """Collect post tags from a given JSON-typed post
+
+        Args:
+            post (dict): Post to perform analysis on
+
+        Returns:
+            list: List of strings of tags for the post
+
+        Raises:
+            ValueError: Unknown tag type for post [Missing keys]
+            AssertionError: ``Tag`` variable was not properly set to a list of strings
+        """
+        keys = ["tags", "tag_string"]
+        try:
+            result = self.collect_key(keys, post, id)
+            if result == "tags":
+                if type(post["tags"]) == str:
+                    tags = post["tags"].split()
+                elif type(post["tags"]) == dict:
+                    tags = (
+                        (category := post["tags"])["general"]
+                        + category["species"]
+                        + category["character"]
+                        + category["copyright"]
+                        + category["artist"]
+                        + category["invalid"]
+                        + category["lore"]
+                        + category["meta"]
+                    )
+                else:
+                    raise ValueError(
+                        f'Unknown type for tags {post["tags"]} [{type(post["tags"])}]'
+                    )
+            else:  # only other option is tag_string* at the moment
+                tags = post["tag_string"].split()
+        except KeyError as e:
+            logging.error(e)  # Key issue
+            raise e
+        except ValueError as e:
+            logging.error(e)  # Value issue
+            raise e
+        assert type(tags) == list
+        return tags
+
+    def collect_post_file(self, post: dict, id: int):
+        """Collect post file from a given JSON-typed post
+
+        Args:
+            post (dict): Post to perform analysis on
+            id (int): ID of given post for logging of issues
+
+        Returns:
+            tuple of str: File extension and File URL
+
+        Raises:
+            ValueError: Unknown file_url type for post [Missing keys]
+            AssertionError: ``file_ext`` and ``file`` variable were not properly set to strings
+        """
+        keys = ["file_url", "file"]
+        file = None
+        file_ext = None
+        try:
+            result = self.collect_key(keys, post)
+            if result == "file_url":
+                if type(post["file_url"]) == str:
+                    file_ext = post["file_url"].split("/")[-1].split(".")[-1]
+                    file = post["file_url"]
+                else:
+                    raise ValueError(
+                        f'Unknown type for file_url {post["file_url"]} [{type(post["file_url"])}]'
+                    )
+            elif result == "file" and "url" in post["file"]:
+                if post["file"]["url"]:
+                    file_ext = post["file"]["url"].split("/")[-1].split(".")[-1]
+                    file = post["file"]["url"]
+                else:
+                    logging.warning(
+                        f"File access for Post {id} blocked by site - possibly requires API access"
+                    )
+            else:
+                raise ValueError("Unknown type for file - No Data")
+        except KeyError as e:
+            logging.error(e)  # Key issue
+            raise e
+        except ValueError as e:
+            logging.error(e)  # Value issue
+            raise e
+        assert type(file) == str and type(file_ext) == str
+        return file_ext, file
 
 
 if __name__ == "__main__":

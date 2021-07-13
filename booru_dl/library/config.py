@@ -61,7 +61,23 @@ import configparser
 import logging
 import os
 import pathlib
-from typing import Dict, List, Tuple
+from typing import Dict, List
+
+from booru_dl.library import backend
+
+# TODO modify URI grabbing to support following structure:
+#  [URI]
+#  uri = uri_1, uri_2
+#  uri_1 = api_key, user_name, booru_type
+#  allows for modular amount of URIs to search
+#  booru_type is especially important for determining codepaths - allow for auto-determination,
+#    but ADD DIRECTLY TO file once type is known [Requires rewrite to disk of config - potentially dangerous]
+#  Or: in [URI] each field is <uri_nickname> with data being <uri_url>, <api_key>, <user_name>
+
+# TODO modify Section to determine which API endpoints are allowed to be searched
+#  [Section_foo]
+#  <data>
+#  api = uri_1, uri_2 (defined exactly like in URI [allow nickname? how to support])
 
 
 class Section:
@@ -79,6 +95,7 @@ class Section:
     allowed_types: List[
         str
     ]  #: List of file types allowed per section (Allows changing file-types per section)
+    api_endpoint: List[str]  #: Allowed APIs to use based on [URI] key
 
 
 class Config:
@@ -126,7 +143,7 @@ class Config:
         self.parser = self._get_config()
         self.useragent = self._get_useragent()
         self.uri = self._get_uri()
-        self.api, self.user = self._get_api_key()
+        # self.api, self.user = self._get_api_key()
         self.paths = self._get_booru_data()
 
         # Create lists of data to collect
@@ -155,6 +172,9 @@ class Config:
         Returns:
             str: Useragent to be provided during POST requests
         """
+        # TODO fix this section - USER no longer valid key
+        #  instead must search each URI for a user_name and use that per booru
+        #  * Above also requires per-booru user-agents - add feature as well
         if (
             "URI" in self.parser
             and "user" in self.parser["URI"]
@@ -164,7 +184,7 @@ class Config:
         else:
             return "Booru DL (user unknown)"
 
-    def _get_uri(self) -> str:
+    def _get_uri(self) -> Dict[str, list]:
         """Given uri.ini collects the expected URI to use
 
         Expects a uri such as https://google.com (but a valid booru one)
@@ -177,34 +197,116 @@ class Config:
             ini (str): Defaults to uri.ini, file name to use for configuration
 
         Returns:
-            str: The URI of the booru site
+            list: List of URI Nicknames, URIs, User Names, and API keys if data exists
         """
-        if "URI" in self.parser and "uri" in self.parser["URI"]:
-            uri = self.parser["URI"]["uri"]
-            logging.debug(f"URI Found: {uri}")
+        if "URI" in self.parser:
+            """
+            Warning: This whole section uses list comprehension and may be confusing
+
+            The basics of what this does: if data exists, add it to a list
+
+            For uris, user_name, and api_keys, it checks data exists and then adds it to the list
+            otherwise it will insert '' to indicate the data doesn't exist for that specific uri
+            """
+            uri_section = self.parser["URI"]
+            available_uri = [key for key in uri_section.keys()]
+            uri_data = [[uri, uri_section[uri]] for uri in available_uri]
+
+            # Setup list
+            result_list: Dict[str, list] = {}
+
+            # Collect URI data
+            for data in uri_data:
+                if data[1] is None:  # NoneType
+                    continue
+                if (
+                    len((result := list(map(str.strip, data[1].split(","))))) > 3
+                ):  # URI, api_type, username and api_key exists
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME Found for {result[0]}")
+                    logging.debug(f"API KEY Found for {result[0]}")
+                    result_list[data[0]] = [
+                        data[0],
+                        result[0],
+                        result[1],
+                        result[2],
+                        result[3],
+                    ]
+                elif len(result) > 2:  # URI, api_type and username exists
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME Found for {result[0]}")
+                    logging.debug(f"API KEY N/A for {result[0]}")
+                    result_list[data[0]] = [
+                        data[0],
+                        result[0],
+                        result[1],
+                        result[2],
+                        "",
+                    ]
+                elif len(result) > 1:  # URI and api_type exists
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME N/A for {result[0]}")
+                    logging.debug(f"API KEY N/A for {result[0]}")
+                    result_list[data[0]] = [data[0], result[0], result[1], "", ""]
+                elif (
+                    len(result) > 0 and result[0] != ""
+                ):  # URI exist, all other data missing
+                    logging.debug(f"URI Found: {result[0]}")
+                    logging.debug(f"USER NAME N/A for {result[0]}")
+                    logging.debug(f"API KEY N/A for {result[0]}")
+                    result_list[data[0]] = [data[0], result[0], "", "", ""]
+                else:
+                    logging.warning(
+                        f"Found broken key {data[0]} in [URI] - Please fix or remove."
+                    )
+
+            for result in result_list:
+                if (api := result_list[result][2]) and api in ["danbooru", "gelbooru"]:
+                    logging.debug(f"API_TYPE Found: {api} for {result}")
+                elif api == "None":
+                    logging.warning(
+                        f"Found None-Type API for {result} - Please remove API from config"
+                    )
+                else:
+                    logging.warning(
+                        f"Could not find API Type for {result} - Attempting to auto-determine"
+                    )
+                    api_type = backend.determine_api(result_list[result][1])
+                    logging.warning(
+                        f"Determined API Type of {api_type} for {result}"
+                        f" Please add to config file as such: "
+                        f"{result}={result_list[result][1]},{api_type},<user_name>,<api_key>"
+                    )
+                    result_list[result][2] = api_type
         else:
-            logging.error("No URI Found - Please ensure config is set up correctly")
-            raise ValueError
-        return uri
-
-    def _get_api_key(self) -> Tuple[str, str]:
-        """Collects the api and username for use in POST requests if provided
-
-
-        Returns:
-            Tuple[str, str]: A tuple containing ``(api_key, user_name)`` or ``('','')`` if undefined
-        """
-        # If provided api key for booru - some require this
-        if "api" in (parse := self.parser["URI"]) and "user" in parse:
-            logging.debug(
-                "Collected API and Username from URI config - Will use for Authentication"
+            logging.error(
+                "No URI Section Found - Please ensure config is set up correctly"
             )
-            return parse["api"], parse["user"]
-        else:
-            logging.debug("No API/Username found - Accepted behavior")
-            return "", ""
+            logging.error(
+                "Possible Solution: Delete config and allow program to create new one"
+            )
+            raise ValueError
+        return result_list
 
-    def _get_booru_data(self) -> Dict[str, str]:
+    # TODO fix this to work with multiple URI
+    # def _get_api_key(self) -> Tuple[str, str]:
+    #     """Collects the api and username for use in POST requests if provided
+    #
+    #
+    #     Returns:
+    #         Tuple[str, str]: A tuple containing ``(api_key, user_name)`` or ``('','')`` if undefined
+    #     """
+    #     # If provided api key for booru - some require this
+    #     if "api" in (parse := self.parser["URI"]) and "user" in parse:
+    #         logging.debug(
+    #             "Collected API and Username from URI config - Will use for Authentication"
+    #         )
+    #         return parse["api"], parse["user"]
+    #     else:
+    #         logging.debug("No API/Username found - Accepted behavior")
+    #         return "", ""
+
+    def _get_booru_data(self) -> Dict[str, dict]:
         """Given a URI provides a dictionary of expected booru website APIs
 
         Warnings:
@@ -217,12 +319,24 @@ class Config:
             URIs available per booru is different, this contains a basic setup based on guesses.
             Failure to collect URIs properly should be submitted to the dev for future improvement.
         """
-
-        return dict(
-            POST_URI=f"{(main_uri := self.uri)}/posts.json",
-            TAG_URI=f"{main_uri}/tags.json",
-            ALIAS_URI=f"{main_uri}/tag_aliases.json",
-        )
+        booru_endpoints: Dict[str, dict] = {}
+        for uri in self.uri:
+            # uri is a list containing: [nickname, url, username, api]
+            if (res := self.uri[uri][2]) == "danbooru":
+                booru_endpoints[uri] = dict(
+                    POST_URI=f"{(main_uri := self.uri[uri][1])}/posts.json",
+                    TAG_URI=f"{main_uri}/tags.json",
+                    ALIAS_URI=f"{main_uri}/tag_aliases.json",
+                )
+            elif res == "gelbooru":
+                booru_endpoints[uri] = dict(
+                    POST_URI=f"{(main_uri := self.uri[uri][1])}/index.php",
+                    TAG_URI=f"{main_uri}/index.php",
+                    ALIAS_URI=f"{main_uri}/index.php",
+                )
+            else:
+                booru_endpoints[uri] = {}  # None
+        return booru_endpoints
 
     def _parse_config(self) -> None:
         """Parses the config provided by ``__init__()`` for sections to search
@@ -261,6 +375,11 @@ class Config:
                     if "allowed_types" in data
                     else "jpg, gif, png"
                 )
+                self.default_endpoints = (
+                    data["api_endpoints"]
+                    if "api_endpoints" in data
+                    else ", ".join(list(self.uri.keys()))  # Default to all available
+                )
 
             elif section_check == "blacklist":
                 # Defaults to nothing blocked if doesn't exist
@@ -281,16 +400,18 @@ class Config:
                 self.posts[f"{section}"] = Section()
                 self.posts[f"{section}"].name = f"{section}"
                 self.posts[f"{section}"].days = int(
-                    self.__get_key("days", section, self.default_days)
+                    self.__get_key("days", section, self.default_days.__str__())
                 )
                 self.posts[f"{section}"].rating = self.__get_key(
-                    "ratings", section, self.default_rating
+                    "ratings", section, self.default_rating.__str__()
                 )
                 self.posts[f"{section}"].min_score = int(
-                    self.__get_key("min_score", section, self.default_min_score)
+                    self.__get_key(
+                        "min_score", section, self.default_min_score.__str__()
+                    )
                 )
                 self.posts[f"{section}"].min_faves = int(
-                    self.__get_key("min_faves", section, self.default_min_fav)
+                    self.__get_key("min_faves", section, self.default_min_fav.__str__())
                 )
                 self.posts[f"{section}"].tags = list(
                     map(str.strip, (self.__get_key("tags", section, "")).split(","))
@@ -311,8 +432,18 @@ class Config:
                         ).split(","),
                     )
                 )
+                self.posts[f"{section}"].api_endpoint = list(
+                    map(
+                        str.strip,
+                        (
+                            self.__get_key(
+                                "api_endpoints", section, self.default_endpoints
+                            )
+                        ).split(","),
+                    )
+                )
 
-    def __get_key(self, key: str, section: str, default: object) -> any:
+    def __get_key(self, key: str, section: str, default: str) -> str:
         """Collects data from the ``configparser.Configparser`` class if available, or returns default value
 
         Args:
@@ -347,12 +478,9 @@ class Config:
             "???": "false",
         }
         config["URI"] = {
-            "; Place the Booru URI here (a URI is like https://google.com)": None,
-            "uri": "",
-            "; [Optional] Support for a booru API key here": None,
-            "api": "",
-            "; [Optional] Support for a booru username here": None,
-            "user": "",
+            "; Place the Booru data here in this order: url, api_type [Optional but recommended], "
+            "username [Optional], api_key [Optional]": None,
+            "insert_nickname_for_uri": "",
         }
         config["Default"] = {
             "notes": "Default values used if missing for other sections. Set them to reasonable levels or your "
@@ -398,6 +526,6 @@ class Config:
 
 if __name__ == "__main__":
     # Intended to be used with debug breakpoints - otherwise do not use
-    config = Config("test.ini")
+    config = Config("../config.ini")
     # Warning: Make sure config is passed a test value or you could accidentally delete your config
     os.remove(config.filepath)

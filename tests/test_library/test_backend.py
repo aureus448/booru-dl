@@ -54,18 +54,54 @@ def test_request_uri_success(provide_package_data, get_session):
         assert result.status_code == 200
 
 
-# def test_request_uri_fail_authenticated(provide_package_data, get_session):
-#     """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
-#     if provide_package_data[1]:
-#         with pytest.raises(requests.RequestException):
-#             result = backend.request_uri(
-#                 get_session,
-#                 provide_package_data[0].paths["test_0"]["POST_URI"],
-#                 provide_package_data[1],
-#                 auth=(provide_package_data[0].user, provide_package_data[0].api),
-#             )
-#             if result.status_code == 200:
-#                 raise requests.RequestException  # Some sites silently fail - not sure why
+def test_request_uri_authenticated(provide_package_data, get_session):
+    """Requires URI set in environment variables, will always 401 as I'm not willing to put my real keys"""
+
+    # Valid wokrs due to API and USER being values of the first url secret
+    valid = (
+        False
+        if os.environ["urls"].split(", ")[0] != provide_package_data[0].uri["test_0"][1]
+        else True
+    )
+    if provide_package_data[1]:
+        if valid:
+            backend.request_uri(
+                get_session,
+                provide_package_data[0].paths["test_0"]["POST_URI"],
+                provide_package_data[1],
+                auth=(os.environ["USER"], os.environ["API"]),
+            )
+        else:
+            with pytest.raises(requests.RequestException):
+                result = backend.request_uri(
+                    get_session,
+                    provide_package_data[0].paths["test_0"]["POST_URI"],
+                    provide_package_data[1],
+                    auth=(
+                        provide_package_data[0].uri["test_0"][4],
+                        provide_package_data[0].uri["test_0"][3],
+                    ),
+                )
+                if result.status_code == 200:
+                    raise requests.RequestException  # Some sites silently fail - not sure why
+
+
+def test_request_uri_bad_tags(provide_package_data, get_session):
+    # Tests only API #2 - known failpoint
+    valid = (
+        False
+        if os.environ["urls"].split(", ")[1] != provide_package_data[0].uri["test_0"][1]
+        else True
+    )
+    if valid:
+        provide_package_data[1]["tags"] = (
+            provide_package_data[1]["tags"] + " filler_tag1 filler_tag2"
+        )
+        backend.request_uri(
+            get_session,
+            provide_package_data[0].paths["test_0"]["POST_URI"],
+            provide_package_data[1],
+        )
 
 
 def test_request_uri_success_no_package(provide_package_data, get_session):

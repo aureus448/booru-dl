@@ -145,34 +145,15 @@ def request_uri(
 
     if result.status_code == 200:
         return result
-    elif result.status_code == 403:
-        scraper = cloudscraper.create_scraper()
-        result = scraper.get(url, params=package)
-        if result.status_code == 403:
-            print("No Dice")
-            raise requests.RequestException(result.status_code)
-        else:
-            return result
+    elif result.status_code == 422:  # Invalid tagging request
+        # limit search to 2 tags if 422 is thrown [Locked/Bad request]
+        package["tags"] = " ".join(str(package["tags"]).split(" ")[:2])  # type: ignore
+        result = session.get(url, params=package)
+        return result
     else:
-        if result.status_code == 422:  # Invalid tagging request
-            # limit search to 2 tags if 422 is thrown [Locked/Bad request]
-            package["tags"] = " ".join(str(package["tags"]).split(" ")[:2])  # type: ignore
-            result = session.get(url, params=package)
-            if result.status_code == 200:
-                return result
-            else:
-                raise requests.RequestException(result.status_code)
-        else:
-            if not silent:
-                logging.error(
-                    f"Request for {url} failed. Error code {result.status_code}"
-                )
-                print(result.url)
-            else:
-                logging.debug(
-                    f"Request for {url} failed. Error code {result.status_code}"
-                )
-            raise requests.RequestException(result.status_code)
+        logging.error(f"Request for {url} failed. Error code {result.status_code}")
+        logging.debug(f"URL failure for: {result.url}")
+        raise requests.RequestException(result.status_code)
 
 
 # def timer(start_time, name="URI Request", optional_clarifier=""):
@@ -254,17 +235,13 @@ def determine_api(api: str) -> str:
         if result.status_code == 200:
             data = result.json()
             if len(data) == 1:
-                try:
-                    data = data["posts"]
-                except ValueError:
-                    pass
-            if type(data) == list and type(data[0]) == dict:
-                api_type = "danbooru"
+                data = data["posts"]
+            assert type(data) == list and type(data[0]) == dict
+            api_type = "danbooru"
         else:
             raise requests.RequestException(f"Error Status Code: {result.status_code}")
-    except Exception as e:
-        if type(e) != requests.RequestException:
-            print(f"Encountered exception {e}")
+    except requests.RequestException:
+        pass
 
     if api_type != "danbooru":
         # Attempt 'gelbooru' booru api setup [With support for JSON]
@@ -273,27 +250,22 @@ def determine_api(api: str) -> str:
             result = session.get(api + "/index.php", params=package)
             if result.status_code == 200:
                 data = result.json()
-                if type(data) == list and type(data[0]) == dict:
-                    api_type = "gelbooru"
-            elif result.status_code == 403:
+                assert type(data) == list and type(data[0]) == dict
+                api_type = "gelbooru"
+            else:
                 scraper = cloudscraper.create_scraper()
                 # result = scraper.get(api+'/index.php', params=package).text
                 result = scraper.get(api + "/index.php", params=package)
-                if result.status_code == 403:
-                    logging.error(
-                        f"No Dice. API endpoint for {api} is broken by cloudflare"
-                    )
-                elif result.status_code == 200:
-                    data = result.json()
-                    if type(data) == list and type(data[0]) == dict:
-                        api_type = "gelbooru"
-            else:
+                # Cloudscraper is broken without paid subscription so just auto-fail
+                assert result.status_code == 403
+                logging.error(
+                    f"No Dice. API endpoint for {api} is broken by cloudflare"
+                )
                 raise requests.RequestException(
                     f"Error Status Code: {result.status_code}"
                 )
-        except Exception as e:
-            if type(e) != requests.RequestException:
-                print(f"Encountered exception {e}")
+        except requests.RequestException:
+            pass
 
     logging.debug(f"Website {api} is of type {api_type}")
     return api_type

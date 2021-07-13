@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "booru-dl"
-version = "0.9"
+version = "1.1"
 description = "Automatic Downloading of any booru!"
 authors = ["Nate Ruppert <nate.ruppert@csu.fullerton.edu>"]
 license = "MIT"

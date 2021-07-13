@@ -172,6 +172,9 @@ class Config:
         Returns:
             str: Useragent to be provided during POST requests
         """
+        # TODO fix this section - USER no longer valid key
+        #  instead must search each URI for a user_name and use that per booru
+        #  * Above also requires per-booru user-agents - add feature as well
         if (
             "URI" in self.parser
             and "user" in self.parser["URI"]

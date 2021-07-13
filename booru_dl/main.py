@@ -158,8 +158,7 @@ class Downloader:
         if result.status_code == 200:
             with open(filepath.joinpath(file_name), "wb") as f:
                 for chunk in result.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
+                    f.write(chunk)
             logging.debug(f"Downloaded {file_name} to {filepath.joinpath(file_name)}")
             return file_name
         else:
@@ -248,7 +247,7 @@ class Downloader:
                 score = 0
                 if "score" in post and type(post["score"]) == int:
                     score = post["score"]
-                elif "score" in post and type(post["score"]) == dict:
+                else:  # "score" in post and type(post["score"]) == dict:
                     score = post["score"]["total"]
 
                 faves = post["fav_count"] if "fav_count" in post else 0
@@ -448,7 +447,6 @@ class Downloader:
             AssertionError: ``Tag`` variable was not properly set to a list of strings
         """
         keys = ["tags", "tag_string"]
-        tags = None
         try:
             result = self.collect_key(keys, post, id)
             if result == "tags":
@@ -469,9 +467,8 @@ class Downloader:
                     raise ValueError(
                         f'Unknown type for tags {post["tags"]} [{type(post["tags"])}]'
                     )
-            elif result == "tag_string":
+            else:  # only other option is tag_string* at the moment
                 tags = post["tag_string"].split()
-
         except KeyError as e:
             logging.error(e)  # Key issue
             raise e

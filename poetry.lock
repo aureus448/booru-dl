@@ -513,7 +513,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "pyinstaller"
-version = "4.3"
+version = "4.5"
 description = "PyInstaller bundles a Python application and all its dependencies into a single package."
 category = "dev"
 optional = false
@@ -967,7 +967,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "08d69137782cbcc15c19b2702e0b13b63fcce071e1a9550cf335af205a9591c8"
+content-hash = "20342535ee37c4f5475077f42c15b6c7d6ea9413354a4fd41b8ed37d7041dfa6"
 
 [metadata.files]
 alabaster = [
@@ -1365,7 +1365,12 @@ pygments = [
     {file = "Pygments-2.9.0.tar.gz", hash = "sha256:a18f47b506a429f6f4b9df81bb02beab9ca21d0a5fee38ed15aef65f0545519f"},
 ]
 pyinstaller = [
-    {file = "pyinstaller-4.3.tar.gz", hash = "sha256:5ecf8bbc230d7298a796e52bb745b95eee12878d141f1645612c99246ecd23f2"},
+    {file = "pyinstaller-4.5-py3-none-macosx_10_13_universal2.whl", hash = "sha256:0129e5ea77c5eb6b2e0de8b1f7ec006238991ac712e3c0e877b995a289e4d8ea"},
+    {file = "pyinstaller-4.5-py3-none-manylinux2014_i686.whl", hash = "sha256:3228e1c7d823c5e786ee41194171e19fc985c4d6074610e4876479697a97b60f"},
+    {file = "pyinstaller-4.5-py3-none-manylinux2014_x86_64.whl", hash = "sha256:8b22656d2eaf5141c20afa3b98422cce17bf05ff9ef4fa8b232b47853b18e4b9"},
+    {file = "pyinstaller-4.5-py3-none-win32.whl", hash = "sha256:9d78452652a27a20a7126fdb93fe7abe731b82dc2a6c163a67fd98bd2a9c44f5"},
+    {file = "pyinstaller-4.5-py3-none-win_amd64.whl", hash = "sha256:df294f6579443924774e7c987deccca47a5f6386137972c8f3f31983db37a43e"},
+    {file = "pyinstaller-4.5.tar.gz", hash = "sha256:86f694faec78a08c3893aacef84b1a49cb53d4e2880559c6124beefd196a3a74"},
 ]
 pyinstaller-hooks-contrib = [
     {file = "pyinstaller-hooks-contrib-2021.2.tar.gz", hash = "sha256:7f5d0689b30da3092149fc536a835a94045ac8c9f0e6dfb23ac171890f5ea8f2"},

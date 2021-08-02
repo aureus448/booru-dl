@@ -46,7 +46,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "auto-py-to-exe"
-version = "2.9.0"
+version = "2.10.0"
 description = "Converts .py to .exe using a simple graphical interface."
 category = "dev"
 optional = false
@@ -967,7 +967,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "08d69137782cbcc15c19b2702e0b13b63fcce071e1a9550cf335af205a9591c8"
+content-hash = "9b9164dac2ca92fee72100f99bb4ff12f20823994b12f4e6ec98aa902acc4c30"
 
 [metadata.files]
 alabaster = [
@@ -991,8 +991,8 @@ attrs = [
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
 ]
 auto-py-to-exe = [
-    {file = "auto-py-to-exe-2.9.0.tar.gz", hash = "sha256:8efeddc76587777b037a813adcf20bdaefcc86c5b05a4f2b3152b899f83a4031"},
-    {file = "auto_py_to_exe-2.9.0-py2.py3-none-any.whl", hash = "sha256:21bd6768f99bebd278a5563a5d0633299824aa0ecd14d28930a07fea23c49eeb"},
+    {file = "auto-py-to-exe-2.10.0.tar.gz", hash = "sha256:cdf3d4f92b8d2fe1e79ea04282c22bd03861fae13f5278a25ef7f2e83ab866bb"},
+    {file = "auto_py_to_exe-2.10.0-py2.py3-none-any.whl", hash = "sha256:bde1239ba1b59226eb700ff6a2fe87958bdfe080a3d155188f1a00c5dd6b8aa5"},
 ]
 babel = [
     {file = "Babel-2.9.1-py2.py3-none-any.whl", hash = "sha256:ab49e12b91d937cd11f0b67cb259a57ab4ad2b59ac7a3b41d6c06c0ac5b0def9"},

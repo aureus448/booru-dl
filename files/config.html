@@ -1,0 +1,544 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>config.py &mdash; booru-dl 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="backend.py" href="backend.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> booru-dl
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Code Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="main.html">main.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backend.html">backend.py</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">config.py</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">booru-dl</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>config.py</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/files/config.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-booru_dl.library.config">
+<span id="config-py"></span><h1>config.py<a class="headerlink" href="#module-booru_dl.library.config" title="Permalink to this headline">¶</a></h1>
+<p>Collects a provided configuration and provides parsing of data collected</p>
+<p>A default configuration will be created on first run if none is provided.
+A configuration file is required to have the following data sections/fields:</p>
+<ol class="arabic">
+<li><dl class="simple">
+<dt>URI</dt><dd><ul class="simple">
+<li><p>uri: URL/URI of booru website (Ex. <a class="reference external" href="https://google.com">https://google.com</a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> api: API key for the booru website</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SEMI-OPTIONAL</span></code> user: Username for the booru website</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Default</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> days: Default amount of days to search for</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> ratings: Default rating(s) to search for</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> min_score: Default minimum score for each post</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> min_favs: Default minimum favorites for each post</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> allowed_types: Default allowed filetypes for all sections</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Other</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> organize_by_type: Whether files should be organized by filetype in each section</p>
+<blockquote>
+<div><p>Example: For section <code class="docutils literal notranslate"><span class="pre">Dog</span></code>, gifs will go into a <code class="docutils literal notranslate"><span class="pre">Dog/gif</span></code> sub-folder</p>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Blacklist</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> tags: list of tags to ignore</p>
+<blockquote>
+<div><p>Example: <code class="docutils literal notranslate"><span class="pre">cat</span></code> - what a disgusting creature</p>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>&lt;Sections to Search #1 -&gt; #n&gt;</dt><dd><p>If data is missing for any field other than tag, the data is collected from the
+default provided in the configuration file.</p>
+<ul>
+<li><p>tags: Tags to search for the section</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> days:  days to search for section</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> ratings: ratings to search for section</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> min_score: minimum score to search for in a section</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> ignore_tags: Tags to ignore for this specific section</p>
+<blockquote>
+<div><p>Example: <code class="docutils literal notranslate"><span class="pre">cat</span></code> in blacklist and ignore_tags means for this specific section <code class="docutils literal notranslate"><span class="pre">cat</span></code> is allowed</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> allowed_types: List of filetypes to allow for a specific section</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Attributes that are listed as <code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> mean that the code is designed to auto-fill these fields with
+appropriate data where missing. Anything not listed as <code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code> is therefore required to prevent the code
+from crashing and/or unexpected code behavior.</p>
+<p>For example, when data is missing for defaults, the [Default] section is set to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Default</span><span class="p">]</span>
+<span class="n">days</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">ratings</span> <span class="o">=</span> <span class="n">s</span>
+<span class="n">min_score</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">min_faves</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">allowed_types</span> <span class="o">=</span> <span class="n">jpg</span><span class="p">,</span> <span class="n">gif</span><span class="p">,</span> <span class="n">png</span>
+</pre></div>
+</div>
+<p>And in this vein, missing section data is set to the defaults values either provided above or in the config.</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">booru_dl.library.config.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ini</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#booru_dl.library.config.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration of booru settings</p>
+<p>Expects a <code class="docutils literal notranslate"><span class="pre">config.ini</span></code> file in a directory above the file in order to work,
+however is able to create one if necessary</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">config.ini</span></code> (or any provided config using the <code class="docutils literal notranslate"><span class="pre">ini</span></code> attribute) is
+collected from the parent directory from the <code class="docutils literal notranslate"><span class="pre">Config()</span></code> class. What this
+means is if the <code class="docutils literal notranslate"><span class="pre">config.py</span></code> file is located as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span>                   <span class="o">-</span> <span class="n">Project</span> <span class="n">Root</span>
+<span class="o">/</span><span class="n">library</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">py</span>  <span class="o">-</span> <span class="n">Location</span> <span class="n">of</span> <span class="n">config</span><span class="o">.</span><span class="n">py</span>
+<span class="o">/</span><span class="n">main</span><span class="o">.</span><span class="n">py</span>            <span class="o">-</span> <span class="n">Location</span> <span class="n">of</span> <span class="n">main</span><span class="o">.</span><span class="n">py</span>
+<span class="o">/*.</span><span class="n">ini</span>              <span class="o">-</span> <span class="n">Location</span> <span class="n">of</span> <span class="n">ini</span> <span class="n">collected</span> <span class="p">(</span><span class="n">Where</span> <span class="o">*</span> <span class="ow">is</span> <span class="n">name</span> <span class="n">provided</span> <span class="ow">in</span> <span class="n">ini</span> <span class="n">attribute</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.__get_key">
+<span class="sig-name descname"><span class="pre">__get_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#booru_dl.library.config.Config.__get_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects data from the <code class="docutils literal notranslate"><span class="pre">configparser.Configparser</span></code> class if available, or returns default value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – Key to search for in config dictionary</p></li>
+<li><p><strong>section</strong> (<em>str</em>) – Section name (provided to indicate errors in <code class="docutils literal notranslate"><span class="pre">logging</span></code>)</p></li>
+<li><p><strong>default</strong> (<em>object</em>) – Default state of requested value</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value for section if found or default if missing</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config._default_config">
+<span class="sig-name descname"><span class="pre">_default_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">configparser.ConfigParser</span></span></span><a class="headerlink" href="#booru_dl.library.config.Config._default_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates default config if config doesn’t exist</p>
+<p>Uses class attributes to determine filename</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A created default configuration with included comments
+for user understanding of options available</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>configparser.ConfigParser</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config._get_booru_data">
+<span class="sig-name descname"><span class="pre">_get_booru_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#booru_dl.library.config.Config._get_booru_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a URI provides a dictionary of expected booru website APIs</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Doesn’t check provided uri for accuracy at the moment</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Dictionary of <em>expected</em> available URIs for a booru website</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Dict[str, str]</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>URIs available per booru is different, this contains a basic setup based on guesses.
+Failure to collect URIs properly should be submitted to the dev for future improvement.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config._get_config">
+<span class="sig-name descname"><span class="pre">_get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">configparser.ConfigParser</span></span></span><a class="headerlink" href="#booru_dl.library.config.Config._get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects the config to use using class attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Configuration file for project</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>configparser.ConfigParser</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config._get_uri">
+<span class="sig-name descname"><span class="pre">_get_uri</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#booru_dl.library.config.Config._get_uri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given uri.ini collects the expected URI to use</p>
+<p>Expects a uri such as <a class="reference external" href="https://google.com">https://google.com</a> (but a valid booru one)</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>No filtering or checking of the passed-through URI is done.
+If it is invalid, the rest of the code may fail prematurely.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ini</strong> (<em>str</em>) – Defaults to uri.ini, file name to use for configuration</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of URI Nicknames, URIs, User Names, and API keys if data exists</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config._get_useragent">
+<span class="sig-name descname"><span class="pre">_get_useragent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#booru_dl.library.config.Config._get_useragent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a useragent string for use</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Useragent to be provided during POST requests</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config._parse_config">
+<span class="sig-name descname"><span class="pre">_parse_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#booru_dl.library.config.Config._parse_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the config provided by <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> for sections to search</p>
+<p>Also collects and determines defaults, blacklist, and any special fields per-section as needed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See module documentation for a full list of available fields.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.blacklist">
+<span class="sig-name descname"><span class="pre">blacklist</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Config.blacklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Blacklist attribute containing all tags to ignore on booru posts</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.default_days">
+<span class="sig-name descname"><span class="pre">default_days</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#booru_dl.library.config.Config.default_days" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default amount of days to check</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.default_min_fav">
+<span class="sig-name descname"><span class="pre">default_min_fav</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#booru_dl.library.config.Config.default_min_fav" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default minimum favorite amount of posts on the booru site</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.default_min_score">
+<span class="sig-name descname"><span class="pre">default_min_score</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#booru_dl.library.config.Config.default_min_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default minimum score of posts on the booru site</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.default_rating">
+<span class="sig-name descname"><span class="pre">default_rating</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Config.default_rating" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default rating of posts on the booru site</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.organize_by_type">
+<span class="sig-name descname"><span class="pre">organize_by_type</span></span><em class="property"><span class="pre">:</span> <span class="pre">bool</span></em><a class="headerlink" href="#booru_dl.library.config.Config.organize_by_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether to organize file types within specific sub-folders</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Config.posts">
+<span class="sig-name descname"><span class="pre">posts</span></span><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#booru_dl.library.config.Section" title="booru_dl.library.config.Section"><span class="pre">booru_dl.library.config.Section</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{}</span></em><a class="headerlink" href="#booru_dl.library.config.Config.posts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of all sections to search for within the given config</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">booru_dl.library.config.</span></span><span class="sig-name descname"><span class="pre">Section</span></span><a class="headerlink" href="#booru_dl.library.config.Section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing filtering data for use in search and collection</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.allowed_types">
+<span class="sig-name descname"><span class="pre">allowed_types</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Section.allowed_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of file types allowed per section (Allows changing file-types per section)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.api_endpoint">
+<span class="sig-name descname"><span class="pre">api_endpoint</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Section.api_endpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allowed APIs to use based on [URI] key</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.days">
+<span class="sig-name descname"><span class="pre">days</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#booru_dl.library.config.Section.days" title="Permalink to this definition">¶</a></dt>
+<dd><p>Days to search for on booru</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.ignore_tags">
+<span class="sig-name descname"><span class="pre">ignore_tags</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Section.ignore_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tags to ignore for this specific section (Allows skipping blacklist)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.min_faves">
+<span class="sig-name descname"><span class="pre">min_faves</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#booru_dl.library.config.Section.min_faves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum favorites of section posts</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.min_score">
+<span class="sig-name descname"><span class="pre">min_score</span></span><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#booru_dl.library.config.Section.min_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum score of section posts</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#booru_dl.library.config.Section.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of section (Ex. <code class="docutils literal notranslate"><span class="pre">Dog</span></code>)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.rating">
+<span class="sig-name descname"><span class="pre">rating</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Section.rating" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rating(s) to search for</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="booru_dl.library.config.Section.tags">
+<span class="sig-name descname"><span class="pre">tags</span></span><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#booru_dl.library.config.Section.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tags for section posts</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="backend.html" class="btn btn-neutral float-left" title="backend.py" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Nate Ruppert.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
